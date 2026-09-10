@@ -1,0 +1,61 @@
+name: mivw
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: mivw
+      POSTGRES_USER: postgres
+      # Development-only credential. Server deployments use a secret manager.
+      POSTGRES_PASSWORD: devonly_not_for_deployment
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - log_statement=ddl
+      - -c
+      - log_min_duration_statement=250
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mivw"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: mivwdev
+      MINIO_ROOT_PASSWORD: devonly_not_for_deployment
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Mock identity provider so developers never need a real IdP or real credentials.
+  oidc:
+    image: quay.io/keycloak/keycloak:26.0
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: devonly_not_for_deployment
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./oidc/realm-mivw.json:/opt/keycloak/data/import/realm-mivw.json:ro
+
+volumes:
+  pgdata:
+  miniodata:

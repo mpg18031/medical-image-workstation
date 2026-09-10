@@ -1,0 +1,45 @@
+#version 450
+// Builds the min/max occupancy grid that lets the ray marcher skip homogeneous
+// regions. Most of the speed-up on clinical CT comes from this: large air and
+// background volumes get traversed in single grid-cell strides.
+
+layout(local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
+
+layout(set = 0, binding = 0) uniform isampler3D uVolume;
+layout(set = 0, binding = 1, r8ui) uniform writeonly uimage3D uOccupancy;
+
+layout(set = 0, binding = 2) uniform Params {
+    ivec4 volumeDims;      // xyz dims, w unused
+    ivec4 gridDims;        // xyz cells, w unused
+    int   emptyThreshold;  // values at or below this count as empty
+    int   padding0;
+    int   padding1;
+    int   padding2;
+} uParams;
+
+void main() {
+    ivec3 cell = ivec3(gl_GlobalInvocationID);
+    if (any(greaterThanEqual(cell, uParams.gridDims.xyz))) {
+        return;
+    }
+
+    ivec3 cellSize = (uParams.volumeDims.xyz + uParams.gridDims.xyz - 1)
+                     / uParams.gridDims.xyz;
+    ivec3 begin = cell * cellSize;
+    // Overlap by one voxel so a feature straddling a cell boundary cannot be
+    // skipped by a ray that enters through the neighbouring cell.
+    ivec3 end = min(begin + cellSize + ivec3(1), uParams.volumeDims.xyz);
+
+    int maxValue = -32768;
+
+    for (int z = begin.z; z < end.z; ++z) {
+        for (int y = begin.y; y < end.y; ++y) {
+            for (int x = begin.x; x < end.x; ++x) {
+                maxValue = max(maxValue, texelFetch(uVolume, ivec3(x, y, z), 0).r);
+            }
+        }
+    }
+
+    uint occupied = maxValue > uParams.emptyThreshold ? 1u : 0u;
+    imageStore(uOccupancy, cell, uvec4(occupied, 0u, 0u, 0u));
+}

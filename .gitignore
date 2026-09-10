@@ -1,0 +1,57 @@
+# --- Secrets and local configuration (never commit) --------------------------
+.env
+.env.local
+*.pem
+*.key
+*.p12
+!infra/certs/README.md
+
+# --- Patient data: nothing resembling real imaging data belongs in git -------
+*.dcm
+!core/tests/fixtures/generated/**/*.dcm
+**/phi/
+**/patient-data/
+
+# --- Python ------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+.tmp/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+*.egg-info/
+
+# --- C++ / CMake -------------------------------------------------------------
+core/build/
+*.o
+*.so
+*.pyd
+*.dll
+*.dylib
+compile_commands.json
+*.spv
+
+# --- Node / Electron ---------------------------------------------------------
+node_modules/
+desktop/dist/
+desktop/.quasar/
+desktop/storybook-static/
+desktop/test-results/
+desktop/playwright-report/
+desktop/blob-report/
+
+# --- Generated ---------------------------------------------------------------
+openapi.json
+
+# --- Editors / OS ------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/settings.shared.json

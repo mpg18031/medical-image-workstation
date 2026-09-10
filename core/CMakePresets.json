@@ -1,0 +1,89 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 28, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "MIVW_ENABLE_TESTS": "ON"
+      }
+    },
+    {
+      "name": "dev",
+      "displayName": "Debug with Vulkan validation layers",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "MIVW_ENABLE_CUDA": "ON"
+      }
+    },
+    {
+      "name": "asan",
+      "displayName": "Debug + AddressSanitizer + UBSan",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "MIVW_ENABLE_SANITIZERS": "ON",
+        "MIVW_ENABLE_CUDA": "OFF"
+      }
+    },
+    {
+      "name": "relwithdebinfo",
+      "displayName": "Optimised with symbols (Nsight profiling)",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "MIVW_ENABLE_CUDA": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "MIVW_ENABLE_CUDA": "ON",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
+      }
+    },
+    {
+      "name": "cpu-only",
+      "displayName": "No GPU (CI runners without a device)",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "MIVW_ENABLE_CUDA": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "dev", "configurePreset": "dev" },
+    { "name": "asan", "configurePreset": "asan" },
+    { "name": "relwithdebinfo", "configurePreset": "relwithdebinfo" },
+    { "name": "release", "configurePreset": "release" },
+    { "name": "cpu-only", "configurePreset": "cpu-only" }
+  ],
+  "testPresets": [
+    {
+      "name": "dev",
+      "configurePreset": "dev",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan",
+      "output": { "outputOnFailure": true },
+      "filter": { "exclude": { "label": "cuda|vulkan" } }
+    },
+    {
+      "name": "cpu-only",
+      "configurePreset": "cpu-only",
+      "output": { "outputOnFailure": true },
+      "filter": { "exclude": { "label": "cuda|vulkan" } }
+    }
+  ]
+}

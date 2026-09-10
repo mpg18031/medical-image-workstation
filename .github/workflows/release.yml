@@ -1,0 +1,111 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+  id-token: write   # keyless signing via Sigstore
+  attestations: write
+
+jobs:
+  verify:
+    name: Full verification
+    uses: ./.github/workflows/ci.yml
+
+  installers:
+    name: Installer (${{ matrix.os }})
+    needs: [verify]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-14]
+    steps:
+      - uses: actions/checkout@v4
+        with: { lfs: true }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: npm, cache-dependency-path: desktop/package-lock.json }
+
+      - run: npm ci --prefix desktop
+      - run: npm run build --prefix desktop
+
+      - name: Package and sign
+        run: npx electron-builder --publish never
+        working-directory: desktop
+        env:
+          # Signing material comes from repository secrets and is never written
+          # to disk in plaintext by this workflow.
+          CSC_LINK: ${{ secrets.MAC_CERT_P12 }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          WIN_CSC_LINK: ${{ secrets.WIN_CERT_PFX }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CERT_PASSWORD }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.os }}
+          path: |
+            desktop/dist/electron/Packaged/*.AppImage
+            desktop/dist/electron/Packaged/*.deb
+            desktop/dist/electron/Packaged/*.exe
+            desktop/dist/electron/Packaged/*.dmg
+
+  sbom:
+    name: SBOM and provenance
+    needs: [verify]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+
+      - run: uv sync --directory api --extra dev
+      - run: npm ci --prefix desktop
+
+      - name: Generate CycloneDX SBOMs
+        run: |
+          uv run --directory api cyclonedx-py environment -o ../sbom-python.json
+          npx --prefix desktop @cyclonedx/cyclonedx-npm --output-file sbom-node.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom-*.json
+
+  publish:
+    name: Publish release
+    needs: [installers, sbom]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { path: artifacts }
+
+      - name: Sign artefacts (keyless)
+        uses: sigstore/cosign-installer@v3
+      - run: |
+          find artifacts -type f \( -name '*.AppImage' -o -name '*.deb' \
+            -o -name '*.exe' -o -name '*.dmg' \) \
+            -exec cosign sign-blob --yes --output-signature {}.sig {} \;
+
+      - uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: 'artifacts/**/*.{AppImage,deb,exe,dmg}'
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: artifacts/**/*
+          body: |
+            > **RESEARCH USE ONLY.** This build is not a cleared or approved
+            > medical device and must not be used for primary diagnosis or
+            > treatment decisions.
+
+            SBOMs and Sigstore signatures are attached to this release.

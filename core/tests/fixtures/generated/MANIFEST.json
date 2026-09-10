@@ -1,0 +1,9 @@
+{
+  "synthetic_ct_private_tags.dcm": "a015a706f97e9732be1d3138d4df329e0a0b947bd03f340afe4e8ca2f39db05b",
+  "synthetic_ct_slice_001.dcm": "8aad3af3ca60e2e5e9c755f2e3c0fa4ecf6ebb3944fb997ca855ba812ccaa0c5",
+  "synthetic_ct_slice_002.dcm": "63c29621fd14ab10977e7d4a6a2828b8ed5a8df5d281c662a1bced3a90056d89",
+  "synthetic_ct_with_phi.dcm": "9cc7523196de07343872257cc7a86271b8a14f4e8c199d34ceba5bef87e4abc8",
+  "synthetic_unsupported_sop.dcm": "132092c1a74c3a6a180b9c89ac57947ece1cc619b8c641d7c15a3c046fcec7cb",
+  "synthetic_us_burned_in.dcm": "311f12a4c26f5102a7caf2785111bd7ec08d0d1594c7fa0084f017d0917f5861",
+  "synthetic_xa_no_burnin_flag.dcm": "85a44585e88365828bcf8ae10f2d437521fb5bf286c18331acc331dd1710edc1"
+}

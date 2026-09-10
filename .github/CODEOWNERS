@@ -1,0 +1,29 @@
+# Default reviewers for everything.
+*                                   @dbmgpd
+
+# ---------------------------------------------------------------------------
+# Two approvals required. A mistake in these paths is a PHI incident, not a bug.
+# Configure "Require review from Code Owners" plus a 2-approval rule on main.
+# ---------------------------------------------------------------------------
+
+# Schema, RLS policies, grants and the audit trail.
+/db/migrations/                     @dbmgpd
+/db/tests/                          @dbmgpd
+
+# Authentication, authorisation and tenant session context.
+/api/src/mivw_api/security/         @dbmgpd
+/api/src/mivw_api/db.py             @dbmgpd
+
+# De-identification: the last line of defence before data is persisted.
+/core/src/dicom/                    @dbmgpd
+/core/include/mivw/dicom/           @dbmgpd
+
+# Electron hardening: the renderer's privilege boundary.
+/desktop/src-electron/              @dbmgpd
+
+# Release and signing pipeline.
+/.github/workflows/release.yml      @dbmgpd
+
+# Security posture and disclosure process.
+/SECURITY.md                        @dbmgpd
+/docs/06-security-compliance.md     @dbmgpd

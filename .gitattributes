@@ -1,0 +1,26 @@
+* text=auto eol=lf
+
+# Binary test assets tracked with LFS.
+*.dcm filter=lfs diff=lfs merge=lfs -text
+*.onnx filter=lfs diff=lfs merge=lfs -text
+core/tests/fixtures/golden/*.png filter=lfs diff=lfs merge=lfs -text
+
+# Binary, never diffed or merged.
+*.png binary
+*.jpg binary
+*.ico binary
+*.icns binary
+*.spv binary
+*.zst binary
+
+# Generated: collapse in review, but still diffable when needed.
+openapi.json linguist-generated=true
+desktop/src/services/generated/** linguist-generated=true
+package-lock.json linguist-generated=true -diff
+uv.lock linguist-generated=true -diff
+
+# Documentation dominates the repo by line count; keep language stats honest.
+docs/** linguist-documentation=true
+
+*.sh text eol=lf
+*.bat text eol=crlf

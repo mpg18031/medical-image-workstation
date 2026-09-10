@@ -1,0 +1,90 @@
+name: GPU
+
+# Device-dependent suites. Runs on a self-hosted runner with an NVIDIA GPU,
+# because the hosted runners have none.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: gpu-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  cuda-vulkan:
+    name: CUDA and Vulkan suites
+    runs-on: [self-hosted, linux, gpu]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with: { lfs: true }
+
+      - name: Report device
+        run: nvidia-smi && vulkaninfo --summary
+
+      - name: Configure
+        run: cmake --preset relwithdebinfo
+        working-directory: core
+
+      - name: Build
+        run: cmake --build --preset relwithdebinfo --parallel
+        working-directory: core
+
+      - name: Unit and GPU tests
+        run: ctest --preset relwithdebinfo --output-on-failure
+        working-directory: core
+        env:
+          # Validation layers stay on: a layer error is a real defect even when
+          # the image looks correct.
+          VK_INSTANCE_LAYERS: VK_LAYER_KHRONOS_validation
+          VK_LAYER_ENABLES: VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT
+
+      - name: compute-sanitizer (memcheck)
+        run: |
+          compute-sanitizer --tool memcheck --error-exitcode 1 \
+            ./build/relwithdebinfo/tests/mivw_gpu_tests
+        working-directory: core
+
+      - name: compute-sanitizer (racecheck)
+        run: |
+          compute-sanitizer --tool racecheck --error-exitcode 1 \
+            ./build/relwithdebinfo/tests/mivw_gpu_tests
+        working-directory: core
+
+      - name: Upload golden image diffs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-image-diffs
+          path: core/tests/fixtures/golden/*.actual.png
+          if-no-files-found: ignore
+
+  render-performance:
+    name: Render latency budget
+    runs-on: [self-hosted, linux, gpu]
+    needs: [cuda-vulkan]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: { lfs: true }
+      - run: cmake --preset release && cmake --build --preset release --parallel
+        working-directory: core
+
+      - name: Measure frame times
+        run: |
+          ./build/release/tools/mivw_bench \
+            --volume 512 --frames 600 --output ../bench-results.json
+        working-directory: core
+
+      - name: Enforce p95 <= 16ms
+        run: python3 scripts/check_bench.py bench-results.json --p95-budget-ms 16
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: bench-results, path: bench-results.json }

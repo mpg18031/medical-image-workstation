@@ -1,0 +1,13 @@
+services:
+  postgres:
+    ports: !override
+      - "127.0.0.1:55434:5432"
+
+  minio:
+    ports: !override
+      - "127.0.0.1:59000:9000"
+      - "127.0.0.1:59001:9001"
+
+  oidc:
+    ports: !override
+      - "127.0.0.1:58080:8080"

@@ -1,0 +1,35 @@
+version: 2
+
+updates:
+  - package-ecosystem: pip
+    directory: /api
+    schedule: { interval: weekly, day: monday }
+    open-pull-requests-limit: 5
+    groups:
+      python-minor:
+        update-types: [minor, patch]
+    labels: [dependencies, python]
+
+  - package-ecosystem: npm
+    directory: /desktop
+    schedule: { interval: weekly, day: monday }
+    open-pull-requests-limit: 5
+    groups:
+      node-minor:
+        update-types: [minor, patch]
+    ignore:
+      # Electron majors change the security model; upgrade deliberately, with
+      # a re-review of the hardening settings.
+      - dependency-name: electron
+        update-types: [version-update:semver-major]
+    labels: [dependencies, javascript]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    labels: [dependencies, ci]
+
+  - package-ecosystem: docker
+    directory: /infra
+    schedule: { interval: weekly, day: monday }
+    labels: [dependencies, docker]

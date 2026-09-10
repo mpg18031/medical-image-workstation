@@ -1,0 +1,20 @@
+[build-system]
+requires = ["scikit-build-core>=0.9", "pybind11>=2.13"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "mivw-core"
+version = "0.1.0"
+description = "MIVW compute core: DICOM, volume processing, inference and Vulkan rendering"
+requires-python = ">=3.12"
+dependencies = ["numpy>=1.26"]
+
+[tool.scikit-build]
+cmake.version = ">=3.28"
+cmake.build-type = "RelWithDebInfo"
+wheel.packages = []
+build-dir = "build/{wheel_tag}"
+
+[tool.scikit-build.cmake.define]
+MIVW_ENABLE_TESTS = "OFF"
+MIVW_ENABLE_CUDA = "ON"

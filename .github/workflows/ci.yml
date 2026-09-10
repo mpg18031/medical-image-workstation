@@ -1,0 +1,185 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+env:
+  PYTHON_VERSION: '3.12'
+  NODE_VERSION: '20'
+
+jobs:
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  lint:
+    name: Lint and type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - run: uv sync --directory api --extra dev
+      - run: uv run --directory api ruff check ../api ../scripts
+      - run: uv run --directory api ruff format --check ../api ../scripts
+      - run: uv run --directory api mypy --strict src
+      - run: uv run --directory api bandit -r src -ll
+      - run: uv run --directory api sqlfluff lint ../db --dialect postgres
+      - run: npm ci --prefix desktop
+      - run: npm run lint --prefix desktop
+
+  database:
+    name: Database (pgTAP)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: mivw
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s
+          --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-16-pgtap libtap-parser-sourcehandler-pgtap-perl
+      - run: uv sync --directory api --extra dev
+      - name: Apply migrations
+        run: uv run --directory api python ../scripts/migrate.py apply
+        env:
+          MIVW_DB_DSN: postgresql://postgres:ci@localhost:5432/mivw
+      - name: Run pgTAP suites
+        run: pg_prove -d mivw -h localhost -U postgres --verbose db/tests/*.sql
+        env:
+          PGPASSWORD: ci
+
+  core:
+    name: Core (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-14]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: lukka/get-cmake@latest
+      - uses: humbletim/setup-vulkan-sdk@v1.2.1
+        with:
+          vulkan-query-version: 1.3.280.0
+          vulkan-components: Vulkan-Headers, Vulkan-Loader, Glslang
+          vulkan-use-cache: true
+      - uses: hendrikmuhs/ccache-action@v1
+      # CI runners have no GPU, so build without CUDA and skip device-labelled
+      # suites. GPU coverage runs in gpu.yml on a self-hosted runner.
+      - run: cmake --preset cpu-only
+        working-directory: core
+      - run: cmake --build --preset cpu-only --parallel
+        working-directory: core
+      - run: ctest --preset cpu-only
+        working-directory: core
+
+  core-sanitizers:
+    name: Core (ASan + UBSan)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: lukka/get-cmake@latest
+      - uses: humbletim/setup-vulkan-sdk@v1.2.1
+        with:
+          vulkan-query-version: 1.3.280.0
+          vulkan-components: Vulkan-Headers, Vulkan-Loader, Glslang
+      - run: cmake --preset asan
+        working-directory: core
+      - run: cmake --build --preset asan --parallel
+        working-directory: core
+      - run: ctest --preset asan
+        working-directory: core
+        env:
+          ASAN_OPTIONS: detect_leaks=1:strict_string_checks=1
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+
+  api:
+    name: API (pytest)
+    runs-on: ubuntu-latest
+    needs: [database]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv sync --directory api --extra dev
+      - run: uv run --directory api pytest -v --cov=mivw_api --cov-report=xml --cov-fail-under=85
+      - name: Contract fuzzing
+        run: uv run --directory api schemathesis run ../openapi.json --checks all --hypothesis-max-examples=100
+        continue-on-error: false
+
+  frontend:
+    name: Frontend (Vitest + Storybook)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - run: npm ci --prefix desktop
+      - run: npm run test:unit --prefix desktop
+      - run: npx playwright install --with-deps chromium
+        working-directory: desktop
+      # --test builds the instrumented preview the runner needs; a plain build
+      # makes every play function fail with "__test is not defined".
+      - run: npm run build-storybook --prefix desktop
+      - name: Component + accessibility tests
+        run: |
+          npx --yes http-server storybook-static --port 6006 --silent &
+          npx --yes wait-on tcp:127.0.0.1:6006
+          npm run test:component
+        working-directory: desktop
+
+  dependencies:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: uv sync --directory api --extra dev
+      - run: uv run --directory api pip-audit
+      - run: npm ci --prefix desktop && npm audit --audit-level=high --prefix desktop
+      - uses: google/osv-scanner-action@v1
+        with: { scan-args: '-r --skip-git ./' }
+
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        language: [python, javascript-typescript, c-cpp]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with: { languages: ${{ matrix.language }}, queries: security-extended }
+      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/analyze@v3

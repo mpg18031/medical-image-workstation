@@ -1,0 +1,67 @@
+name: E2E
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  playwright:
+    name: Playwright (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        # PRs get Linux only; the full matrix runs nightly.
+        os: ${{ github.event_name == 'schedule' && fromJSON('["ubuntu-latest","windows-latest","macos-14"]') || fromJSON('["ubuntu-latest"]') }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { lfs: true }
+
+      - uses: astral-sh/setup-uv@v3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Install Python dependencies
+        run: uv sync --directory api --extra dev
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix desktop
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+        working-directory: desktop
+
+      - name: Build the Electron app
+        run: npm run build --prefix desktop
+
+      # Xvfb: Electron needs a display server on headless Linux runners.
+      - name: Run E2E (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum npm run test:e2e --prefix desktop
+
+      - name: Run E2E (Windows/macOS)
+        if: runner.os != 'Linux'
+        run: npm run test:e2e --prefix desktop
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-${{ matrix.os }}
+          path: |
+            desktop/playwright-report/
+            desktop/test-results/
+          retention-days: 7
