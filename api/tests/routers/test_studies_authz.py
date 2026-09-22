@@ -52,11 +52,20 @@ async def test_study_from_other_org_returns_404_not_403(
 async def test_viewer_sees_only_own_tenant_in_worklist(
     client, viewer_token, seeded_orgs: SeededOrgs
 ):
-    resp = await client.get("/api/v1/studies", headers={"Authorization": f"Bearer {viewer_token}"})
+    headers = {"Authorization": f"Bearer {viewer_token}"}
+    resp = await client.get("/api/v1/studies", headers=headers)
     assert resp.status_code == 200
     returned = {item["id"] for item in resp.json()["items"]}
     assert str(seeded_orgs.a_study_id) in returned
     assert str(seeded_orgs.b_study_id) not in returned
+
+    resp = await client.get(f"/api/v1/studies/{seeded_orgs.a_study_id}/series", headers=headers)
+    assert resp.status_code == 200, resp.text
+    assert [series["id"] for series in resp.json()] == [str(seeded_orgs.a_series_id)]
+
+    resp = await client.get(f"/api/v1/series/{seeded_orgs.a_series_id}", headers=headers)
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["studyId"] == str(seeded_orgs.a_study_id)
 
 
 @pytest.mark.parametrize("path", ALL_PROTECTED_PATHS)
@@ -88,6 +97,46 @@ async def test_viewer_cannot_create_annotation(client, viewer_token, seeded_orgs
         headers={"Authorization": f"Bearer {viewer_token}"},
     )
     assert resp.status_code == 403
+
+
+async def test_annotator_can_manage_own_annotation(client, token_factory, seeded_orgs: SeededOrgs):
+    headers = {"Authorization": f"Bearer {token_factory(org_id=seeded_orgs.a, role='annotator')}"}
+    resp = await client.post(
+        f"/api/v1/series/{seeded_orgs.a_series_id}/annotations",
+        json={
+            "kind": "measurement",
+            "payload": {"units": "mm", "points": [[0, 0, 0], [10, 0, 0]]},
+            "label": "initial",
+        },
+        headers=headers,
+    )
+    assert resp.status_code == 201, resp.text
+    annotation = resp.json()
+    annotation_id = annotation["id"]
+    assert annotation["label"] == "initial"
+
+    resp = await client.get(
+        f"/api/v1/series/{seeded_orgs.a_series_id}/annotations", headers=headers
+    )
+    assert resp.status_code == 200, resp.text
+    assert [item["id"] for item in resp.json()] == [annotation_id]
+
+    resp = await client.patch(
+        f"/api/v1/annotations/{annotation_id}",
+        json={"label": "updated"},
+        headers=headers,
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["label"] == "updated"
+
+    resp = await client.delete(f"/api/v1/annotations/{annotation_id}", headers=headers)
+    assert resp.status_code == 204, resp.text
+
+    resp = await client.get(
+        f"/api/v1/series/{seeded_orgs.a_series_id}/annotations", headers=headers
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json() == []
 
 
 async def test_non_admin_cannot_register_a_model(client, viewer_token):

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import sys
 import types
 import uuid
@@ -154,6 +155,7 @@ def test_key_resolution_local_and_kms(monkeypatch):
 @pytest.mark.asyncio
 async def test_storage_helpers_and_integrity(monkeypatch):
     settings = SimpleNamespace(
+        mode="local",
         object_endpoint="http://object-store/",
         object_bucket="bucket",
         presigned_url_ttl_seconds=30,
@@ -162,8 +164,9 @@ async def test_storage_helpers_and_integrity(monkeypatch):
     store = storage.ObjectStore(settings)
     client = FakeStorageClient()
 
+    @contextlib.asynccontextmanager
     async def fake_client():
-        return client
+        yield client
 
     monkeypatch.setattr(store, "_client", fake_client)
     digest = store.digest(b"payload")
@@ -625,6 +628,21 @@ async def test_render_router_branches(monkeypatch):
     monkeypatch.setattr(render, "get_core_runtime", lambda: Core())
     monkeypatch.setattr(render, "StudyRepository", Repo)
     monkeypatch.setattr(render, "write_audit", _async_noop)
+
+    class FakeVolume:
+        def __init__(self, dims, _spacing, _dtype):
+            import numpy as np
+
+            self._array = np.zeros(tuple(reversed(dims)), dtype=np.int16)
+
+        def as_array(self):
+            return self._array
+
+    monkeypatch.setitem(
+        sys.modules,
+        "mivw_core",
+        SimpleNamespace(Volume=FakeVolume, DType=SimpleNamespace(Int16="int16")),
+    )
 
     result = await render.create_render_session(payload, principal, object(), Store())
     assert result.token == "token" and result.gpu_memory_bytes == 123

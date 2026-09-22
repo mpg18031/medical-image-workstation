@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/vue3";
-import { expect, fn, within } from "@storybook/test";
+import { expect, fn, within } from "storybook/test";
 import WindowLevelControl from "./WindowLevelControl.vue";
 
 const meta: Meta<typeof WindowLevelControl> = {
@@ -26,14 +26,10 @@ const KEY_CODES: Record<string, number> = {
 
 function pressKey(element: HTMLElement, key: string, times = 1): void {
   for (let i = 0; i < times; i += 1) {
-    element.dispatchEvent(
-      new KeyboardEvent("keydown", {
-        key,
-        code: key,
-        keyCode: KEY_CODES[key],
-        bubbles: true,
-      }),
-    );
+    const eventInit: KeyboardEventInit = { key, code: key, bubbles: true };
+    const keyCode = KEY_CODES[key];
+    if (keyCode !== undefined) eventInit.keyCode = keyCode;
+    element.dispatchEvent(new KeyboardEvent("keydown", eventInit));
   }
 }
 

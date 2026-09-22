@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 4.4)
 
 project(mivw_core
     VERSION 0.1.0
     DESCRIPTION "Real-Time AI-Powered Medical Image Workstation compute core"
     LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -17,7 +17,12 @@ option(MIVW_ENABLE_SANITIZERS "Build with ASan/UBSan" OFF)
 
 if(MIVW_ENABLE_CUDA)
     enable_language(CUDA)
-    set(CMAKE_CUDA_STANDARD 20)
+    if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 13.4 OR
+       NOT CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 13.5)
+        message(FATAL_ERROR
+            "CUDA Toolkit 13.4 is required; found ${CMAKE_CUDA_COMPILER_VERSION}")
+    endif()
+    set(CMAKE_CUDA_STANDARD 23)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
     set(CMAKE_CUDA_ARCHITECTURES 75 80 86 89)
 endif()
@@ -30,14 +35,15 @@ find_package(Threads REQUIRED)
 # Pin by commit SHA, not tag: tags are mutable, SHAs are not.
 FetchContent_Declare(pybind11
     GIT_REPOSITORY https://github.com/pybind/pybind11.git
-    GIT_TAG        v2.13.6)
+    GIT_TAG        97bf890db679505a14dfe547a5e77bb2bd05dc90)
 FetchContent_Declare(googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG        v1.15.2)
+    GIT_TAG        b514bdc898e2951020cbdca1304b75f5950d1f59)
 FetchContent_Declare(vma
     GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
-    GIT_TAG        v3.1.0)
+    GIT_TAG        009ecd192c1289c7529bff248a16cfe896254816)
 
+set(PYBIND11_FINDPYTHON ON)
 FetchContent_MakeAvailable(pybind11 vma)
 if(MIVW_ENABLE_TESTS)
     FetchContent_MakeAvailable(googletest)

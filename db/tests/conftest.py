@@ -35,9 +35,9 @@ def migrated_dsn() -> Iterator[str]:
         yield dsn
         return
 
-    from testcontainers.postgres import PostgresContainer
+    from testcontainers.community.postgres import PostgresContainer
 
-    image = os.environ.get("MIVW_TEST_POSTGRES_IMAGE", "postgres:16-alpine")
+    image = os.environ.get("MIVW_TEST_POSTGRES_IMAGE", "postgres:18-alpine")
     with PostgresContainer(image, driver=None) as container:
         container_dsn = container.get_connection_url()
         _apply_migrations(container_dsn)

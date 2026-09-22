@@ -24,6 +24,9 @@ export async function launchApp(
 ): Promise<{ app: ElectronApplication; window: Page }> {
   const app = await electron.launch({
     args: [
+      // GitHub's Ubuntu runners restrict unprivileged user namespaces, which
+      // breaks Chromium's sandbox.
+      ...(process.env.CI ? ["--no-sandbox"] : []),
       `--user-data-dir=${mkdtempSync(path.join(tmpdir(), "mivw-e2e-"))}`,
       "dist/electron/UnPackaged/electron-main.js",
     ],
@@ -59,3 +62,4 @@ export async function openFirstStudy(window: Page): Promise<void> {
 }
 
 export { expect, test };
+export type { ElectronApplication, Page };

@@ -4,13 +4,13 @@
 
 | Tool | Version | Notes |
 | --- | --- | --- |
-| CMake | ≥ 3.28 | Presets, CUDA/Vulkan discovery |
-| C++ compiler | GCC 13 / Clang 17 / MSVC 19.38 | C++20 required |
-| CUDA Toolkit | 12.4+ | Compute capability ≥ 7.5 |
+| CMake | ≥ 4.4 | Presets, CUDA C++23 and Vulkan discovery |
+| C++ compiler | GCC 13 / Clang 17 / MSVC 19.38 | C++23 required |
+| CUDA Toolkit | 13.4 | Compute capability ≥ 7.5; compatible NVIDIA driver required |
 | Vulkan SDK | 1.3.280+ | Provides `glslc`, validation layers |
 | Python | 3.12 | Managed with `uv` |
-| Node.js | 20 LTS | |
-| PostgreSQL client | 16 | `psql`, `pg_dump` |
+| Node.js | 26 LTS | Project tooling; Electron bundles its own Node runtime |
+| PostgreSQL client | 18 | `psql`, `pg_dump` |
 | Docker | 24+ | Compose v2, Testcontainers |
 | Git LFS | any | Test fixtures and golden images |
 
@@ -29,9 +29,20 @@ generates local development certificates, and writes a `.env.local` from
 `.env.example`. It never writes secrets to the repository.
 
 ```bash
-docker compose -f infra/docker-compose.yml up -d   # PostgreSQL 16 + MinIO + OIDC mock
+docker compose -f infra/docker-compose.yml up -d   # PostgreSQL 18 + MinIO + OIDC mock
 make db-migrate
 make db-seed          # synthetic, non-PHI fixtures only
+```
+
+PostgreSQL 18 uses a new data-directory layout. Before replacing a PostgreSQL 17-or-older
+development container, back up databases you need and restore them into the new container;
+the existing `pgdata` volume is not upgraded automatically:
+
+```bash
+docker compose -f infra/docker-compose.yml exec -T postgres pg_dump -U postgres -Fc mivw > mivw.dump
+docker compose -f infra/docker-compose.yml down
+docker compose -f infra/docker-compose.yml up -d postgres
+docker compose -f infra/docker-compose.yml exec -T postgres pg_restore -U postgres -d mivw --clean --if-exists < mivw.dump
 ```
 
 ## 3. Build targets
@@ -112,6 +123,13 @@ graph LR
 
 GPU workflows use a self-hosted runner with an NVIDIA GPU. Jobs requiring a device are
 CTest-labelled `cuda`/`vulkan` and are skipped (not failed) elsewhere.
+
+Release tags run the reusable CI workflow before packaging. The macOS installer
+requires the `MAC_CERT_P12`, `MAC_CERT_PASSWORD`, `APPLE_ID`,
+`APPLE_APP_PASSWORD`, and `APPLE_TEAM_ID` repository secrets; Windows requires
+`WIN_CERT_PFX` and `WIN_CERT_PASSWORD`. Missing credentials fail the release
+rather than producing unsigned installers. Linux installers are accompanied by
+keyless Sigstore bundles, as are the signed macOS and Windows installers.
 
 ## 7. Branching and review
 

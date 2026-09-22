@@ -52,7 +52,7 @@ def _resolve(key_id: str, mode: Mode) -> bytes:
 
 def _resolve_from_kms(key_id: str) -> bytes:
     try:
-        import boto3  # type: ignore[import-untyped]
+        import boto3
     except ImportError as exc:  # pragma: no cover - server-mode dependency
         raise KeyUnavailableError("boto3 is required to resolve keys in server mode") from exc
 

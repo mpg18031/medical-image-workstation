@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { ApiClient, ApiError } from "src/services/apiClient";
 
 function jsonResponse(
@@ -12,19 +12,29 @@ function jsonResponse(
   });
 }
 
+async function expectApiError(request: Promise<unknown>): Promise<ApiError> {
+  try {
+    await request;
+  } catch (error) {
+    if (error instanceof ApiError) return error;
+    throw error;
+  }
+  throw new Error("Expected request to reject with an API error");
+}
+
 describe("ApiClient", () => {
-  let fetchImpl: ReturnType<typeof vi.fn>;
+  let fetchImpl: Mock<typeof fetch>;
   let client: ApiClient;
-  let onUnauthenticated: ReturnType<typeof vi.fn>;
+  let onUnauthenticated: Mock<() => void>;
 
   beforeEach(() => {
-    fetchImpl = vi.fn();
-    onUnauthenticated = vi.fn();
+    fetchImpl = vi.fn<typeof fetch>();
+    onUnauthenticated = vi.fn<() => void>();
     client = new ApiClient({
       baseUrl: "http://api.test/",
       getToken: () => "token-123",
       onUnauthenticated,
-      fetchImpl: fetchImpl as unknown as typeof fetch,
+      fetchImpl,
     });
   });
 
@@ -34,7 +44,7 @@ describe("ApiClient", () => {
 
     const [url, init] = fetchImpl.mock.calls[0]!;
     expect(url).toBe("http://api.test/api/v1/studies");
-    expect((init.headers as Record<string, string>).Authorization).toBe(
+    expect((init!.headers as Record<string, string>).Authorization).toBe(
       "Bearer token-123",
     );
   });
@@ -56,7 +66,7 @@ describe("ApiClient", () => {
     fetchImpl.mockResolvedValue(jsonResponse(202, {}));
     await client.post("/inference-runs", { modelId: "m" }, "key-abc");
 
-    const init = fetchImpl.mock.calls[0]![1];
+    const init = fetchImpl.mock.calls[0]![1]!;
     expect((init.headers as Record<string, string>)["Idempotency-Key"]).toBe(
       "key-abc",
     );
@@ -81,19 +91,17 @@ describe("ApiClient", () => {
       ),
     );
 
-    const error = await client.get("/studies").catch((e: unknown) => e);
-    expect(error).toBeInstanceOf(ApiError);
-    expect((error as ApiError).status).toBe(422);
-    expect((error as ApiError).problem.errors?.[0]?.field).toBe(
-      "volumeAssetId",
-    );
+    const error = await expectApiError(client.get("/studies"));
+    expect(error.status).toBe(422);
+    expect(error.problem.errors?.[0]?.field).toBe("volumeAssetId");
   });
 
   it("notifies once on 401 so the shell can re-authenticate", async () => {
     fetchImpl.mockResolvedValue(
       jsonResponse(401, { title: "Authentication required", status: 401 }),
     );
-    await client.get("/studies").catch(() => undefined);
+    const error = await expectApiError(client.get("/studies"));
+    expect(error.status).toBe(401);
     expect(onUnauthenticated).toHaveBeenCalledOnce();
   });
 
@@ -107,9 +115,7 @@ describe("ApiClient", () => {
       }),
     );
 
-    const error = await client
-      .get("/studies")
-      .catch((e: unknown) => e as ApiError);
+    const error = await expectApiError(client.get("/studies"));
     expect(onUnauthenticated).not.toHaveBeenCalled();
     expect(error.isTransient).toBe(true);
     expect(error.isUnauthenticated).toBe(false);
@@ -118,9 +124,7 @@ describe("ApiClient", () => {
   it("normalises a network failure as a transient API error", async () => {
     fetchImpl.mockRejectedValue(new TypeError("Failed to fetch"));
 
-    const error = await client
-      .get("/studies")
-      .catch((e: unknown) => e as ApiError);
+    const error = await expectApiError(client.get("/studies"));
     expect(error).toBeInstanceOf(ApiError);
     expect(error.status).toBe(503);
     expect(error.message).toBe("Workstation API unavailable");
@@ -136,9 +140,7 @@ describe("ApiClient", () => {
       }),
     );
 
-    const error = await client
-      .get("/studies")
-      .catch((e: unknown) => e as ApiError);
+    const error = await expectApiError(client.get("/studies"));
     expect(error).toBeInstanceOf(ApiError);
     expect(error.status).toBe(502);
     expect(error.message).toBe("Bad Gateway");
@@ -148,12 +150,12 @@ describe("ApiClient", () => {
     const anonymous = new ApiClient({
       baseUrl: "http://api.test",
       getToken: () => null,
-      fetchImpl: fetchImpl as unknown as typeof fetch,
+      fetchImpl,
     });
     fetchImpl.mockResolvedValue(jsonResponse(200, { status: "ok" }));
 
     await anonymous.get("/healthz");
-    const init = fetchImpl.mock.calls[0]![1];
+    const init = fetchImpl.mock.calls[0]![1]!;
     expect(
       (init.headers as Record<string, string>).Authorization,
     ).toBeUndefined();

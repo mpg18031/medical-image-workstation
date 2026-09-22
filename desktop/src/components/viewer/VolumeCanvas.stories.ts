@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/vue3";
-import { expect, fn, userEvent, within } from "@storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 import VolumeCanvas from "./VolumeCanvas.vue";
 
 const meta: Meta<typeof VolumeCanvas> = {

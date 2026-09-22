@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/vue3";
-import { expect, fn, userEvent, within } from "@storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 import StudyTable from "./StudyTable.vue";
 import type { StudySummary } from "src/services/types";
 

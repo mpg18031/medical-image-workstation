@@ -8,7 +8,7 @@ RealTimeAIPoweredMedicalImageWorkstation/
 │   ├── migrations/            Numbered, forward-only SQL migrations
 │   ├── tests/                 pgTAP suites
 │   └── seed/                  Non-PHI development fixtures
-├── core/                      C++20 / CUDA / Vulkan compute core
+├── core/                      C++23 / CUDA 13.4 / Vulkan compute core
 │   ├── include/mivw/          Public headers
 │   ├── src/                   Implementation
 │   ├── cuda/                  .cu kernels

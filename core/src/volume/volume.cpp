@@ -186,7 +186,7 @@ Volume resampleIsotropic(const Volume &src, double targetSpacingMm) {
   // Round so the physical extent is preserved to within half a voxel, which
   // is the invariant the test suite asserts.
   Dims3 dstDims{};
-  for (int axis = 0; axis < 3; ++axis) {
+  for (std::size_t axis = 0; axis < dstDims.size(); ++axis) {
     const double extent = static_cast<double>(srcDims[axis]) * srcSpacing[axis];
     dstDims[axis] = std::max(
         1, static_cast<std::int32_t>(std::llround(extent / targetSpacingMm)));

@@ -1,5 +1,6 @@
-import { defineBoot } from "#q-app/wrappers";
+import { defineBoot } from "@quasar/app-vite";
 import { ApiClient } from "src/services/apiClient";
+import { WsTransport } from "src/services/wsTransport";
 import { useStudiesStore } from "src/stores/studies";
 import { useAnnotationsStore } from "src/stores/annotations";
 import { useModelsStore } from "src/stores/models";
@@ -12,6 +13,7 @@ import type {
   Page,
   RenderSession,
   Role,
+  SegmentationResult,
   SeriesDetail,
   StudySummary,
 } from "src/services/types";
@@ -25,16 +27,20 @@ interface AccessTokenClaims {
   preferred_username?: string;
 }
 
+const API_ORIGIN = import.meta.env.MIVW_API_ORIGIN ?? "http://127.0.0.1:8000";
+
 /** Wires the API client into every store that needs it. */
 export default defineBoot(async () => {
   const auth = useAuthStore();
   await signInForLocalDevelopment(auth);
 
   const client = new ApiClient({
-    baseUrl: process.env.MIVW_API_ORIGIN ?? "http://127.0.0.1:8000",
+    baseUrl: API_ORIGIN,
     getToken: () => getValidAccessToken(auth),
     onUnauthenticated: () => auth.signOut(),
   });
+
+  const models = useModelsStore();
 
   useStudiesStore().useApi({
     listStudies: (query) => client.get<Page<StudySummary>>("/studies", query),
@@ -51,9 +57,11 @@ export default defineBoot(async () => {
     remove: (id) => client.delete(`/annotations/${id}`),
   });
 
-  useModelsStore().useApi({
+  models.useApi({
     list: () => client.get<ModelDetail[]>("/models"),
     runInference: (body, key) => client.post<Job>("/inference-runs", body, key),
+    getSegmentation: (runId) =>
+      client.get<SegmentationResult>(`/inference-runs/${runId}/segmentation`),
   });
 
   useViewportStore().useApi({
@@ -64,14 +72,44 @@ export default defineBoot(async () => {
         height,
       }),
     closeSession: (sessionId) => client.delete(`/render/sessions/${sessionId}`),
+    attachSegmentation: (sessionId, inferenceRunId) =>
+      client.post<void>(`/render/sessions/${sessionId}/segmentation`, {
+        inferenceRunId,
+      }),
   });
+
+  if (auth.session) connectJobsSocket(auth.session.accessToken, models);
 });
+
+/**
+ * Job progress/completion push channel.
+ *
+ * Without this, `models.activeJob` is set once at submission and never
+ * updated again: the job table's own state transitions (queued -> running ->
+ * succeeded/failed) would otherwise never reach the UI, so "Run Model" would
+ * appear to spin forever even once the backend finishes the job.
+ */
+function connectJobsSocket(
+  accessToken: string,
+  models: ReturnType<typeof useModelsStore>,
+): void {
+  const wsOrigin = API_ORIGIN.replace(/^http/, "ws");
+  const transport = new WsTransport({
+    url: `${wsOrigin}/ws/jobs?token=${encodeURIComponent(accessToken)}`,
+  });
+  transport.connect({
+    onText: (data) => {
+      if (data && typeof data === "object" && "id" in data && "status" in data)
+        models.updateJob(data as Job);
+    },
+  });
+}
 
 async function signInForLocalDevelopment(
   auth: ReturnType<typeof useAuthStore>,
 ): Promise<void> {
-  const e2eMode = process.env.MIVW_E2E === "1";
-  if ((!process.env.DEV && !e2eMode) || auth.session) return;
+  const e2eMode = import.meta.env.MIVW_E2E === "1";
+  if ((!import.meta.env.DEV && !e2eMode) || auth.session) return;
 
   try {
     const appInfo = e2eMode
@@ -151,9 +189,10 @@ async function requestDevAccessToken(role?: Role): Promise<TokenResponse> {
   return requestToken(
     new URLSearchParams({
       grant_type: "password",
-      client_id: process.env.MIVW_OIDC_CLIENT_ID ?? "mivw-workstation",
-      username: role ?? process.env.MIVW_DEV_USERNAME ?? "researcher",
-      password: process.env.MIVW_DEV_PASSWORD ?? "devonly_not_for_deployment",
+      client_id: import.meta.env.MIVW_OIDC_CLIENT_ID ?? "mivw-workstation",
+      username: role ?? import.meta.env.MIVW_DEV_USERNAME ?? "researcher",
+      password:
+        import.meta.env.MIVW_DEV_PASSWORD ?? "devonly_not_for_deployment",
       scope: "openid profile email",
     }),
   );
@@ -165,7 +204,7 @@ async function requestRefreshedAccessToken(
   return requestToken(
     new URLSearchParams({
       grant_type: "refresh_token",
-      client_id: process.env.MIVW_OIDC_CLIENT_ID ?? "mivw-workstation",
+      client_id: import.meta.env.MIVW_OIDC_CLIENT_ID ?? "mivw-workstation",
       refresh_token: refreshToken,
     }),
   );
@@ -173,7 +212,7 @@ async function requestRefreshedAccessToken(
 
 async function requestToken(body: URLSearchParams): Promise<TokenResponse> {
   const issuer =
-    process.env.MIVW_OIDC_ISSUER ?? "http://127.0.0.1:8080/realms/mivw";
+    import.meta.env.MIVW_OIDC_ISSUER ?? "http://127.0.0.1:8080/realms/mivw";
 
   const response = await fetch(`${issuer}/protocol/openid-connect/token`, {
     method: "POST",

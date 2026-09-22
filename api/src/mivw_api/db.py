@@ -14,7 +14,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
-import asyncpg  # type: ignore[import-untyped]
+import asyncpg
 
 from mivw_api.problems import ProblemError
 from mivw_api.security.principal import Principal

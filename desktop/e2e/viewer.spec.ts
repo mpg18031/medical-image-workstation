@@ -86,11 +86,15 @@ test.describe("volume viewer", () => {
 
   test("recovers the stream after a transport drop", async () => {
     await window.evaluate(() => {
-      window.dispatchEvent(new Event("offline"));
+      document.defaultView?.dispatchEvent(new Event("offline"));
     });
 
     const banner = window.getByTestId("volume-canvas-reconnecting");
-    if (await banner.isVisible({ timeout: 2000 }).catch(() => false)) {
+    const bannerAppeared = await banner
+      .waitFor({ state: "visible", timeout: 2000 })
+      .then(() => true)
+      .catch(() => false);
+    if (bannerAppeared) {
       await expect(banner).toBeHidden({ timeout: 30_000 });
     }
     await expect(window.getByTestId("volume-canvas")).toBeVisible();

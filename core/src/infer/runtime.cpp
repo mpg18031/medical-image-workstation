@@ -97,12 +97,15 @@ void InferenceRuntime::dryRun() {
   Ort::AllocatorWithDefaultOptions allocator;
   auto inputName = impl_->session.GetInputNameAllocated(0, allocator);
   auto outputName = impl_->session.GetOutputNameAllocated(0, allocator);
-  const auto shape =
+  auto shape =
       impl_->session.GetInputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
 
   std::size_t count = 1;
-  for (auto dim : shape)
-    count *= static_cast<std::size_t>(dim > 0 ? dim : 1);
+  for (auto &dim : shape) {
+    if (dim <= 0)
+      dim = 1;
+    count *= static_cast<std::size_t>(dim);
+  }
   std::vector<float> zeros(count, 0.0F);
 
   const Ort::MemoryInfo memInfo =

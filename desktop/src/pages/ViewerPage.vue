@@ -24,8 +24,9 @@ const {
   droppedFrames,
   connectionState,
   streamError,
+  segmentationActive,
 } = storeToRefs(viewport);
-const { selectedModel, visibleLabels, isRunning, activeJob } =
+const { selectedModel, visibleLabels, isRunning, activeJob, segmentation } =
   storeToRefs(models);
 const { selectedSeries } = storeToRefs(useStudiesStore());
 
@@ -34,7 +35,7 @@ const inferenceError = ref<string | null>(null);
 
 const presetNames = computed(() => Object.keys(WINDOW_PRESETS));
 // `process` isn't available inside the compiled template's inline handlers.
-const isE2E = process.env.MIVW_E2E === "1";
+const isE2E = import.meta.env.MIVW_E2E === "1";
 
 let e2eFrameTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -86,6 +87,24 @@ watch(
     viewport.centerOn(volumeCenterMm(series.geometry));
   },
   { immediate: true },
+);
+
+// Once the job resolves, fetch what it produced and composite it onto the
+// still-open render session — the job itself carries no result payload.
+watch(
+  () => activeJob.value?.status,
+  async (status) => {
+    if (status !== "succeeded" || !activeJob.value) return;
+    try {
+      await models.fetchSegmentation(activeJob.value.id);
+      await viewport.attachSegmentation(activeJob.value.id);
+    } catch (caught) {
+      inferenceError.value =
+        caught instanceof Error
+          ? caught.message
+          : "Unable to load the segmentation result";
+    }
+  },
 );
 
 onMounted(async () => {
@@ -171,6 +190,7 @@ async function addMeasurementPoint(x: number, y: number): Promise<void> {
         :frame-time-ms="frameTimeMs"
         :dropped-frames="droppedFrames"
         :connection-state="connectionState"
+        :segmentation-active="segmentationActive"
         @orbit="
           (dx, dy) => {
             viewport.orbit(dx, dy);
@@ -282,6 +302,7 @@ async function addMeasurementPoint(x: number, y: number): Promise<void> {
       <LabelLegend
         :labels="selectedModel?.labelMap ?? {}"
         :visible="visibleLabels"
+        :stats="segmentation?.labelStats ?? {}"
         @toggle="models.setLabelVisible"
         @show-all="models.showAllLabels"
       />

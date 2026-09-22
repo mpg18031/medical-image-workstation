@@ -8,6 +8,8 @@ permissions:
   contents: write
   id-token: write   # keyless signing via Sigstore
   attestations: write
+  security-events: write
+  actions: read
 
 jobs:
   verify:
@@ -21,33 +23,73 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-14]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
         with: { lfs: true }
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: npm, cache-dependency-path: desktop/package-lock.json }
+        with: { node-version: '26', cache: npm, cache-dependency-path: desktop/package-lock.json }
 
       - run: npm ci --prefix desktop
-      - run: npm run build --prefix desktop
 
-      - name: Package and sign
-        run: npx electron-builder --publish never
-        working-directory: desktop
+      - name: Check signing credentials
+        shell: bash
         env:
-          # Signing material comes from repository secrets and is never written
-          # to disk in plaintext by this workflow.
-          CSC_LINK: ${{ secrets.MAC_CERT_P12 }}
-          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+          MAC_CERT_P12: ${{ secrets.MAC_CERT_P12 }}
+          MAC_CERT_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          WIN_CSC_LINK: ${{ secrets.WIN_CERT_PFX }}
-          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CERT_PASSWORD }}
+          WIN_CERT_PFX: ${{ secrets.WIN_CERT_PFX }}
+          WIN_CERT_PASSWORD: ${{ secrets.WIN_CERT_PASSWORD }}
+        run: |
+          node <<'NODE'
+          const names = process.env.RUNNER_OS === 'macOS'
+            ? ['MAC_CERT_P12', 'MAC_CERT_PASSWORD', 'APPLE_ID', 'APPLE_APP_PASSWORD', 'APPLE_TEAM_ID']
+            : process.env.RUNNER_OS === 'Windows'
+              ? ['WIN_CERT_PFX', 'WIN_CERT_PASSWORD']
+              : [];
+          const missing = names.filter(name => !process.env[name]);
+          if (missing.length) {
+            console.error(`Missing required signing secrets: ${missing.join(', ')}`);
+            process.exit(1);
+          }
+          NODE
+
+      - name: Build, package and sign
+        run: npm run build --prefix desktop -- --publish never
+        env:
+          MIVW_REQUIRE_CODE_SIGNING: ${{ runner.os != 'Linux' && '1' || '0' }}
+          CSC_LINK: ${{ runner.os == 'macOS' && secrets.MAC_CERT_P12 || '' }}
+          CSC_KEY_PASSWORD: ${{ runner.os == 'macOS' && secrets.MAC_CERT_PASSWORD || '' }}
+          APPLE_ID: ${{ runner.os == 'macOS' && secrets.APPLE_ID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ runner.os == 'macOS' && secrets.APPLE_APP_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ runner.os == 'macOS' && secrets.APPLE_TEAM_ID || '' }}
+          WIN_CSC_LINK: ${{ runner.os == 'Windows' && secrets.WIN_CERT_PFX || '' }}
+          WIN_CSC_KEY_PASSWORD: ${{ runner.os == 'Windows' && secrets.WIN_CERT_PASSWORD || '' }}
+
+      - name: Check installer outputs
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = 'desktop/dist/electron/Packaged';
+          const files = fs.readdirSync(path);
+          const extensions = process.env.RUNNER_OS === 'Linux'
+            ? ['.AppImage', '.deb']
+            : process.env.RUNNER_OS === 'Windows' ? ['.exe'] : ['.dmg'];
+          for (const ext of extensions) {
+            if (!files.some(file => file.endsWith(ext))) {
+              console.error(`No ${ext} installer found in ${path}`);
+              process.exitCode = 1;
+            }
+          }
+          NODE
 
       - uses: actions/upload-artifact@v4
         with:
           name: installer-${{ matrix.os }}
+          if-no-files-found: error
           path: |
             desktop/dist/electron/Packaged/*.AppImage
             desktop/dist/electron/Packaged/*.deb
@@ -60,22 +102,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
+      - uses: astral-sh/setup-uv@v5
+        with: { python-version: '3.13' }
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with: { node-version: '26' }
 
       - run: uv sync --directory api --extra dev
       - run: npm ci --prefix desktop
 
       - name: Generate CycloneDX SBOMs
         run: |
-          uv run --directory api cyclonedx-py environment -o ../sbom-python.json
-          npx --prefix desktop @cyclonedx/cyclonedx-npm --output-file sbom-node.json
+          uv tool run --from cyclonedx-bom==8.0.1 cyclonedx-py environment api/.venv/bin/python -o sbom-python.json
+          npx --yes --package @cyclonedx/cyclonedx-npm@6.0.1 cyclonedx-npm --output-file sbom-node.json desktop/package.json
 
       - uses: actions/upload-artifact@v4
         with:
           name: sbom
           path: sbom-*.json
+          if-no-files-found: error
 
   publish:
     name: Publish release
@@ -84,18 +128,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
-        with: { path: artifacts }
+        with: { path: artifacts, pattern: 'installer-*' }
+      - uses: actions/download-artifact@v4
+        with: { path: artifacts, pattern: sbom }
 
       - name: Sign artefacts (keyless)
         uses: sigstore/cosign-installer@v3
-      - run: |
-          find artifacts -type f \( -name '*.AppImage' -o -name '*.deb' \
-            -o -name '*.exe' -o -name '*.dmg' \) \
-            -exec cosign sign-blob --yes --output-signature {}.sig {} \;
+      - name: Sign installer artifacts
+        run: |
+          set -euo pipefail
+          count=0
+          while IFS= read -r -d '' artifact; do
+            cosign sign-blob --yes --bundle "${artifact}.sigstore.json" "$artifact"
+            count=$((count + 1))
+          done < <(find artifacts -type f \( -name '*.AppImage' -o -name '*.deb' \
+            -o -name '*.exe' -o -name '*.dmg' \) -print0)
+          if [ "$count" -eq 0 ]; then
+            echo "No installers found to sign" >&2
+            exit 1
+          fi
 
       - uses: actions/attest-build-provenance@v1
         with:
-          subject-path: 'artifacts/**/*.{AppImage,deb,exe,dmg}'
+          subject-path: |
+            artifacts/**/*.AppImage
+            artifacts/**/*.deb
+            artifacts/**/*.exe
+            artifacts/**/*.dmg
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
@@ -108,4 +167,4 @@ jobs:
             > medical device and must not be used for primary diagnosis or
             > treatment decisions.
 
-            SBOMs and Sigstore signatures are attached to this release.
+            SBOMs and Sigstore verification bundles are attached to this release.

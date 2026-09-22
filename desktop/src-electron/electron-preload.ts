@@ -39,6 +39,7 @@ export interface MivwBridge {
   disconnectRenderStream(): Promise<void>;
   sendCamera(state: CameraState): void;
   sendWindowLevel(center: number, width: number): void;
+  sendLayers(segmentationVisible: boolean, opacity: number): void;
   onFrame(callback: (frame: FramePayload) => void): () => void;
   onStreamError(callback: (message: string) => void): () => void;
   /** Native file dialog. Returns paths only; the renderer never gets a handle. */
@@ -67,6 +68,15 @@ const bridge: MivwBridge = {
     ipcRenderer.send(
       "render:window-level",
       JSON.stringify({ center: Number(center), width: Number(width) }),
+    ),
+
+  sendLayers: (segmentationVisible, opacity) =>
+    ipcRenderer.send(
+      "render:layers",
+      JSON.stringify({
+        segmentationVisible: Boolean(segmentationVisible),
+        opacity: Number(opacity),
+      }),
     ),
 
   onFrame: (callback) => {

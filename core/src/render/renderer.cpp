@@ -31,7 +31,12 @@
 #pragma GCC diagnostic ignored "-Wcast-align"
 #pragma GCC diagnostic ignored "-Wshadow"
 #pragma GCC diagnostic ignored "-Wconversion"
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wnullability-extension"
+#pragma clang diagnostic ignored "-Wnullability-completeness"
+#else
 #pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
 #pragma GCC diagnostic ignored "-Wunused-function"
 #endif
 #include <vk_mem_alloc.h>

@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import contextlib
 from collections.abc import AsyncIterator
+from http import HTTPStatus
 
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from mivw_api.config import Mode, get_settings
 from mivw_api.logging import configure_logging
@@ -37,12 +40,50 @@ from mivw_api.ws import jobs_ws, render_ws
 log = structlog.get_logger(__name__)
 
 
+_PROBLEM_RESPONSES = {
+    400: "Bad request",
+    401: "Unauthenticated",
+    403: "Forbidden",
+    404: "Not found",
+    409: "Conflict",
+    413: "Payload too large",
+    422: "Validation error",
+    429: "Rate limited",
+    503: "Dependency unavailable",
+}
+
+
+def _use_problem_media_type(app: FastAPI) -> None:
+    """Document error bodies as RFC 9457 `application/problem+json`, as they are served."""
+
+    def build() -> dict[str, object]:
+        if app.openapi_schema:
+            return app.openapi_schema
+        schema = get_openapi(
+            title=app.title,
+            version=app.version,
+            description=app.description,
+            routes=app.routes,
+        )
+        for path_item in schema.get("paths", {}).values():
+            for operation in path_item.values():
+                for status, response in operation.get("responses", {}).items():
+                    content = response.get("content", {})
+                    if int(status) in _PROBLEM_RESPONSES and "application/json" in content:
+                        content["application/problem+json"] = content.pop("application/json")
+        app.openapi_schema = schema
+        return schema
+
+    app.openapi = build  # type: ignore[method-assign]
+
+
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
 
     from mivw_api.db import create_pool
     from mivw_api.services.core_runtime import CoreRuntime, set_core_runtime
+    from mivw_api.services.job_worker import JobWorker
     from mivw_api.storage import ObjectStore
 
     app.state.pool = await create_pool(settings)
@@ -51,10 +92,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     set_core_runtime(app.state.core)
     await app.state.core.warm_up()
 
+    app.state.job_worker = JobWorker(app.state.pool, app.state.core, app.state.storage)
+    app.state.job_worker.start()
+
     log.info("api.started", mode=settings.mode, gpu_device=settings.gpu_device)
     try:
         yield
     finally:
+        await app.state.job_worker.stop()
         await app.state.core.shutdown()
         await app.state.pool.close()
         log.info("api.stopped")
@@ -76,7 +121,12 @@ def create_app() -> FastAPI:
         docs_url="/docs" if settings.mode is Mode.LOCAL else None,
         redoc_url=None,
         openapi_url="/openapi.json" if settings.mode is Mode.LOCAL else None,
+        responses={
+            status: {"model": ProblemDetail, "description": description}
+            for status, description in _PROBLEM_RESPONSES.items()
+        },
     )
+    _use_problem_media_type(app)
 
     # Outermost first.
     app.add_middleware(RequestIdMiddleware)
@@ -129,12 +179,31 @@ def _register_exception_handlers(app: FastAPI) -> None:
             status=422,
             instance=request.url.path,
             requestId=getattr(request.state, "request_id", None),
-            errors=errors,  # type: ignore[arg-type]
+            errors=errors,
         )
         return JSONResponse(
             status_code=422,
             content=problem.model_dump(by_alias=True, exclude_none=True),
             media_type="application/problem+json",
+        )
+
+    @app.exception_handler(StarletteHTTPException)
+    async def _http_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
+        # Framework-raised errors (malformed body, unknown route, wrong method)
+        # use the same problem+json envelope as every other error.
+        problem = ProblemDetail(
+            type=f"https://mivw.local/problems/http-{exc.status_code}",
+            title=HTTPStatus(exc.status_code).phrase,
+            status=exc.status_code,
+            detail=exc.detail if isinstance(exc.detail, str) else None,
+            instance=request.url.path,
+            requestId=getattr(request.state, "request_id", None),
+        )
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=problem.model_dump(by_alias=True, exclude_none=True),
+            media_type="application/problem+json",
+            headers=exc.headers,
         )
 
     @app.exception_handler(Exception)

@@ -1,0 +1,14 @@
+{
+  "name": "quasar-electron-app",
+  "version": "1.0.0",
+  "description": "Quasar Electron Folder",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "electron": "latest",
+    "electron-builder": "^26.18.0"
+  },
+  "allowScripts": {
+    "electron-winstaller@5.4.0": true
+  }
+}

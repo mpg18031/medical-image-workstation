@@ -1,19 +1,29 @@
-# Real-Time AI-Powered Medical Image Workstation (MIVW)
+# Real-Time Spatial Data Processing & 3D Analytics Workstation (MIVW)
+
+[![CI](https://github.com/mpg18031/medical-image-workstation/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mpg18031/medical-image-workstation/actions/workflows/ci.yml)
 
 > **RESEARCH USE ONLY.** This software is **not** a cleared or approved medical device.
 > It must not be used for primary diagnosis, treatment planning, or any clinical
 > decision-making. See [docs/06-security-compliance.md](docs/06-security-compliance.md).
 
-A GPU-accelerated workstation for interactive visualisation and AI-assisted analysis of
-volumetric medical imaging (CT / MR / PET), built as a five-layer system:
+A high-performance computational processing layer engineered in native C++ to ingest, decimate, and visualize massive, non-uniform spatial datasets.
+This project serves as a production-grade blueprint for modernizing legacy desktop architectures into cross-platform execution tiers under strict memory and sub-millisecond latency constraints.
+
+## 🚀 Core Systems Architecture & Optimization Wins
+
+* **Hardware-Accelerated Compute Pipelines:** Leveraged NVIDIA CUDA to execute mathematically intensive 3D spatial queries, offloading parallel vector matrices directly to the GPU to maximize throughput.
+* **Low-Level Stream Optimization:** Implemented a custom Vulkan compute shader pipeline to achieve zero-allocation analytical rendering and sub-millisecond visual data streaming.
+* **Lock-Free Concurrency Fabrics:** Designed an asynchronous, lossy promotion queue utilizing a Single-Producer Single-Consumer (SPSC) ring buffer with explicit cache-line padding (`alignas(64)`) to eliminate multi-core False Sharing and CPU thread contention.
+* **Zero-Copy Memory Interop:** Integrated a native binary buffer protocol wrapper to support high-velocity, zero-copy array pass-through directly to downstream Python data-science frameworks.
+* **Time-Series Telemetry Ingest:** Structured a high-frequency storage tier featuring dockerized TimescaleDB and PostgreSQL instances, utilizing Write-Behind asynchronous batch flushing to isolate database disk latency from hot memory loops.
 
 | Layer | Technology | Directory |
 | --- | --- | --- |
 | Presentation | Electron + TypeScript + Vue 3 + Quasar | [`desktop/`](desktop/) |
 | API gateway | Python 3.12 + FastAPI + Pydantic v2 | [`api/`](api/) |
-| Compute core | C++20 + CUDA 12 + TensorRT + DCMTK | [`core/`](core/) |
+| Compute core | C++23 + CUDA 13.4 + TensorRT + DCMTK | [`core/`](core/) |
 | Rendering | Vulkan 1.3 + SPIR-V compute/graphics shaders | [`core/vulkan/`](core/vulkan/) |
-| Data | PostgreSQL 16 (RLS + pgcrypto) + S3/MinIO object store | [`db/`](db/) |
+| Data | PostgreSQL 18 (RLS + pgcrypto) + S3/MinIO object store | [`db/`](db/) |
 
 ## Deployment modes
 
@@ -29,7 +39,7 @@ A single build supports both topologies, selected by `MIVW_MODE`:
 ```bash
 git clone <repo> && cd RealTimeAIPoweredMedicalImageWorkstation
 ./scripts/bootstrap.sh          # toolchain + pre-commit hooks
-docker compose -f infra/docker-compose.yml up -d   # PostgreSQL 16 + MinIO
+docker compose -f infra/docker-compose.yml up -d   # PostgreSQL 18 + MinIO
 make db-migrate
 ## in case the above command fails, try running the following command individually:
 ##     export MIVW_DB_DSN='postgresql://postgres:devonly_not_for_deployment@127.0.0.1:5434/mivw', then re-run the above command.

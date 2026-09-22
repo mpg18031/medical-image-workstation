@@ -100,13 +100,14 @@ export class ApiClient {
 
     let response: Response;
     try {
-      response = await this.fetchImpl(url.toString(), {
+      const requestInit: RequestInit = {
         method: options.method ?? "GET",
         headers,
-        body:
-          options.body === undefined ? undefined : JSON.stringify(options.body),
-        ...(options.signal ? { signal: options.signal } : {}),
-      });
+      };
+      if (options.body !== undefined)
+        requestInit.body = JSON.stringify(options.body);
+      if (options.signal) requestInit.signal = options.signal;
+      response = await this.fetchImpl(url.toString(), requestInit);
     } catch (caught) {
       throw new ApiError({
         type: "https://mivw.local/problems/service-unavailable",

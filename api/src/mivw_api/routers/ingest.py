@@ -6,6 +6,7 @@ study must never occupy a gateway worker.
 
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import UTC, datetime
 from typing import Annotated
@@ -134,7 +135,10 @@ async def get_session(
     if row is None:
         raise NotFound("No such ingest session")
 
-    payload = row["payload"] or {}
+    # asyncpg hands jsonb back as text (no decoder codec is registered in
+    # create_pool); decode before calling .get() on it.
+    raw_payload = row["payload"]
+    payload = json.loads(raw_payload) if isinstance(raw_payload, str) else (raw_payload or {})
     return IngestSession(
         id=row["id"],
         status=payload.get("state", "open"),

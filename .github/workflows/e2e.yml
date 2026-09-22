@@ -16,51 +16,59 @@ permissions:
 
 jobs:
   playwright:
-    name: Playwright (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    name: Playwright (Linux)
+    # Linux only: the suite starts PostgreSQL, MinIO and Keycloak with
+    # `docker compose`, and Windows/macOS runners cannot run Linux containers.
+    runs-on: ubuntu-latest
     timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix:
-        # PRs get Linux only; the full matrix runs nightly.
-        os: ${{ github.event_name == 'schedule' && fromJSON('["ubuntu-latest","windows-latest","macos-14"]') || fromJSON('["ubuntu-latest"]') }}
     steps:
       - uses: actions/checkout@v4
         with: { lfs: true }
 
-      - uses: astral-sh/setup-uv@v3
+      # 1️⃣ Upgraded to v5 with native binary caching enabled
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          python-version: '3.13'
+
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '26'
           cache: npm
           cache-dependency-path: desktop/package-lock.json
 
+      # global-setup.ts runs scripts/migrate.py and uvicorn from the repo-root
+      # .venv, the same layout scripts/bootstrap.sh creates.
       - name: Install Python dependencies
-        run: uv sync --directory api --extra dev
+        run: |
+          uv venv .venv --python 3.13 --clear
+          uv pip install --python .venv -e "./api[dev]"
 
       - name: Install frontend dependencies
         run: npm ci --prefix desktop
 
+      # 2️⃣ Added standard Playwright binary filesystem level cache layer
+      - name: Cache Playwright Binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-node-26
+
+      # 3️⃣ Restricted install to Chromium only to save machine time and prevent timeouts
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install --with-deps chromium
         working-directory: desktop
 
-      - name: Build the Electron app
-        run: npm run build --prefix desktop
-
-      # Xvfb: Electron needs a display server on headless Linux runners.
-      - name: Run E2E (Linux)
-        if: runner.os == 'Linux'
-        run: xvfb-run --auto-servernum npm run test:e2e --prefix desktop
-
-      - name: Run E2E (Windows/macOS)
-        if: runner.os != 'Linux'
-        run: npm run test:e2e --prefix desktop
+      # global-setup.ts builds the app itself with MIVW_E2E=1 baked in.
+      - name: Run E2E
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" npm run test:e2e --prefix desktop
+        env:
+          CI: 'true'
 
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: playwright-report-${{ matrix.os }}
+          name: playwright-report
           path: |
             desktop/playwright-report/
             desktop/test-results/

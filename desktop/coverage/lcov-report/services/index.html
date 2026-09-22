@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="../base.css" />
     <link rel="shortcut icon" type="image/x-icon" href="../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="../theme.js"></script>
     <style type='text/css'>
         .coverage-summary .sorter {
             background-image: url(../sort-arrow-sprite.png);
@@ -19,34 +20,44 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
+
+        <label class="theme-select quiet">
+            Theme
+            <select id="themeSelect" autocomplete="off">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="legacy">Legacy</option>
+            </select>
+        </label>
+
         <h1><a href="../index.html">All files</a> services</h1>
         <div class='clearfix'>
 
             <div class='fl pad1y space-right2'>
-                <span class="strong">31.94% </span>
+                <span class="strong">91.46% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>100/313</span>
+                <span class='fraction'>150/164</span>
             </div>
 
 
             <div class='fl pad1y space-right2'>
-                <span class="strong">78.43% </span>
+                <span class="strong">72.91% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>40/51</span>
+                <span class='fraction'>70/96</span>
             </div>
 
 
             <div class='fl pad1y space-right2'>
-                <span class="strong">83.33% </span>
+                <span class="strong">79.54% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>15/18</span>
+                <span class='fraction'>35/44</span>
             </div>
 
 
             <div class='fl pad1y space-right2'>
-                <span class="strong">31.94% </span>
+                <span class="strong">92.1% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>100/313</span>
+                <span class='fraction'>140/152</span>
             </div>
 
 
@@ -61,7 +72,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <div class="pad1">
 <table class="coverage-summary">
 <thead>
@@ -80,32 +91,32 @@
 </thead>
 <tbody><tr>
 	<td class="file high" data-value="apiClient.ts"><a href="apiClient.ts.html">apiClient.ts</a></td>
-	<td data-value="94.33" class="pic high">
-	<div class="chart"><div class="cover-fill" style="width: 94%"></div><div class="cover-empty" style="width: 6%"></div></div>
+	<td data-value="91.66" class="pic high">
+	<div class="chart"><div class="cover-fill" style="width: 91%"></div><div class="cover-empty" style="width: 9%"></div></div>
 	</td>
-	<td data-value="94.33" class="pct high">94.33%</td>
-	<td data-value="106" class="abs high">100/106</td>
-	<td data-value="77.08" class="pct medium">77.08%</td>
-	<td data-value="48" class="abs medium">37/48</td>
-	<td data-value="80" class="pct high">80%</td>
-	<td data-value="15" class="abs high">12/15</td>
-	<td data-value="94.33" class="pct high">94.33%</td>
-	<td data-value="106" class="abs high">100/106</td>
+	<td data-value="91.66" class="pct high">91.66%</td>
+	<td data-value="48" class="abs high">44/48</td>
+	<td data-value="77.55" class="pct medium">77.55%</td>
+	<td data-value="49" class="abs medium">38/49</td>
+	<td data-value="76.92" class="pct medium">76.92%</td>
+	<td data-value="13" class="abs medium">10/13</td>
+	<td data-value="93.18" class="pct high">93.18%</td>
+	<td data-value="44" class="abs high">41/44</td>
 	</tr>
 
 <tr>
-	<td class="file low" data-value="geometry.ts"><a href="geometry.ts.html">geometry.ts</a></td>
-	<td data-value="0" class="pic low">
-	<div class="chart"><div class="cover-fill" style="width: 0%"></div><div class="cover-empty" style="width: 100%"></div></div>
+	<td class="file high" data-value="geometry.ts"><a href="geometry.ts.html">geometry.ts</a></td>
+	<td data-value="82" class="pic high">
+	<div class="chart"><div class="cover-fill" style="width: 82%"></div><div class="cover-empty" style="width: 18%"></div></div>
 	</td>
-	<td data-value="0" class="pct low">0%</td>
-	<td data-value="105" class="abs low">0/105</td>
-	<td data-value="100" class="pct high">100%</td>
-	<td data-value="1" class="abs high">1/1</td>
-	<td data-value="100" class="pct high">100%</td>
-	<td data-value="1" class="abs high">1/1</td>
-	<td data-value="0" class="pct low">0%</td>
-	<td data-value="105" class="abs low">0/105</td>
+	<td data-value="82" class="pct high">82%</td>
+	<td data-value="50" class="abs high">41/50</td>
+	<td data-value="54.54" class="pct medium">54.54%</td>
+	<td data-value="22" class="abs medium">12/22</td>
+	<td data-value="71.42" class="pct medium">71.42%</td>
+	<td data-value="14" class="abs medium">10/14</td>
+	<td data-value="80.43" class="pct high">80.43%</td>
+	<td data-value="46" class="abs high">37/46</td>
 	</tr>
 
 <tr>
@@ -116,26 +127,26 @@
 	<td data-value="0" class="pct empty">0%</td>
 	<td data-value="0" class="abs empty">0/0</td>
 	<td data-value="0" class="pct empty">0%</td>
-	<td data-value="1" class="abs empty">1/1</td>
+	<td data-value="0" class="abs empty">0/0</td>
 	<td data-value="0" class="pct empty">0%</td>
-	<td data-value="1" class="abs empty">1/1</td>
+	<td data-value="0" class="abs empty">0/0</td>
 	<td data-value="0" class="pct empty">0%</td>
 	<td data-value="0" class="abs empty">0/0</td>
 	</tr>
 
 <tr>
-	<td class="file low" data-value="wsTransport.ts"><a href="wsTransport.ts.html">wsTransport.ts</a></td>
-	<td data-value="0" class="pic low">
-	<div class="chart"><div class="cover-fill" style="width: 0%"></div><div class="cover-empty" style="width: 100%"></div></div>
+	<td class="file high" data-value="wsTransport.ts"><a href="wsTransport.ts.html">wsTransport.ts</a></td>
+	<td data-value="98.48" class="pic high">
+	<div class="chart"><div class="cover-fill" style="width: 98%"></div><div class="cover-empty" style="width: 2%"></div></div>
 	</td>
-	<td data-value="0" class="pct low">0%</td>
-	<td data-value="102" class="abs low">0/102</td>
+	<td data-value="98.48" class="pct high">98.48%</td>
+	<td data-value="66" class="abs high">65/66</td>
+	<td data-value="80" class="pct high">80%</td>
+	<td data-value="25" class="abs high">20/25</td>
+	<td data-value="88.23" class="pct high">88.23%</td>
+	<td data-value="17" class="abs high">15/17</td>
 	<td data-value="100" class="pct high">100%</td>
-	<td data-value="1" class="abs high">1/1</td>
-	<td data-value="100" class="pct high">100%</td>
-	<td data-value="1" class="abs high">1/1</td>
-	<td data-value="0" class="pct low">0%</td>
-	<td data-value="102" class="abs low">0/102</td>
+	<td data-value="62" class="abs high">62/62</td>
 	</tr>
 
 </tbody>
@@ -146,7 +157,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-09-09T02:14:51.667Z
+                at 2026-11-05T19:29:58.800Z
             </div>
         <script src="../prettify.js"></script>
         <script>

@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
-import type { Job, ModelDetail } from "src/services/types";
+import type { Job, ModelDetail, SegmentationResult } from "src/services/types";
 
 export interface ModelsApi {
   list(): Promise<ModelDetail[]>;
@@ -8,6 +8,7 @@ export interface ModelsApi {
     body: { modelId: string; volumeAssetId: string },
     key: string,
   ): Promise<Job>;
+  getSegmentation(inferenceRunId: string): Promise<SegmentationResult>;
 }
 
 export interface SpecMismatch {
@@ -20,6 +21,7 @@ export const useModelsStore = defineStore("models", () => {
   const models = ref<ModelDetail[]>([]);
   const selectedModelId = ref<string | null>(null);
   const activeJob = ref<Job | null>(null);
+  const segmentation = ref<SegmentationResult | null>(null);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
   const visibleLabels = ref<Set<number>>(new Set());
@@ -91,9 +93,20 @@ export const useModelsStore = defineStore("models", () => {
     key: string,
   ): Promise<Job> {
     if (!api) throw new Error("models store has no API client");
+    segmentation.value = null;
     const job = await api.runInference(body, key);
     activeJob.value = job;
     return job;
+  }
+
+  async function fetchSegmentation(
+    inferenceRunId: string,
+  ): Promise<SegmentationResult> {
+    if (!api) throw new Error("models store has no API client");
+    const result = await api.getSegmentation(inferenceRunId);
+    segmentation.value = result;
+    showAllLabels();
+    return result;
   }
 
   function setLabelVisible(index: number, visible: boolean): void {
@@ -117,6 +130,7 @@ export const useModelsStore = defineStore("models", () => {
   function reset(): void {
     selectedModelId.value = null;
     activeJob.value = null;
+    segmentation.value = null;
     visibleLabels.value = new Set();
     error.value = null;
   }
@@ -125,6 +139,7 @@ export const useModelsStore = defineStore("models", () => {
     models,
     selectedModelId,
     activeJob,
+    segmentation,
     isLoading,
     error,
     visibleLabels,
@@ -136,6 +151,7 @@ export const useModelsStore = defineStore("models", () => {
     checkSpec,
     load,
     runInference,
+    fetchSegmentation,
     setLabelVisible,
     showAllLabels,
     updateJob,

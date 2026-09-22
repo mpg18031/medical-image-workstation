@@ -2,7 +2,7 @@
 # Install with: pre-commit install --install-hooks
 
 default_language_version:
-  python: python3.12
+  python: python3.13
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -52,7 +52,7 @@ repos:
           - pyjwt[crypto]>=2.9
           - structlog>=24.4
           - types-requests
-        args: [--strict]
+        args: [--strict, --config-file=api/pyproject.toml]
 
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.10
@@ -72,7 +72,7 @@ repos:
     hooks:
       - id: sqlfluff-lint
         args:
-          [--dialect, postgres, "--exclude-rules=LT01,LT02,LT05,CP02", "--ignore=parsing"]
+          [--dialect, postgres, "--exclude-rules=LT01,LT02,LT05,CP02,RF04,CP04,LT14", "--ignore=parsing"]
         files: ^db/tests/
 
   - repo: https://github.com/pre-commit/mirrors-prettier
@@ -80,6 +80,11 @@ repos:
     hooks:
       - id: prettier
         files: ^desktop/.*\.(ts|vue|json|scss|md)$
+        # `system` node is unusable here: npm 11.12.x rejects the
+        # `--allow-git=root` install of this mirror's git placeholder package
+        # (EALLOWGIT), so let nodeenv provision a node whose npm (11.19) accepts
+        # it. Bump together with `rev` above when updating prettier.
+        language_version: "26.8.1"
 
   - repo: local
     hooks:

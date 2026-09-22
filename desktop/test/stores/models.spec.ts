@@ -28,7 +28,11 @@ describe("models store", () => {
 
   beforeEach(() => {
     setActivePinia(createPinia());
-    api = { list: vi.fn(), runInference: vi.fn() };
+    api = {
+      list: vi.fn(),
+      runInference: vi.fn(),
+      getSegmentation: vi.fn(),
+    };
   });
 
   function storeWithApi() {
@@ -169,5 +173,90 @@ describe("models store", () => {
 
     expect(store.models).toEqual([]);
     expect(store.error).not.toBeNull();
+  });
+
+  it("loads the model registry successfully", async () => {
+    api.list.mockResolvedValue([model()]);
+    const store = storeWithApi();
+
+    await store.load();
+
+    expect(store.models.map((entry) => entry.id)).toEqual(["m1"]);
+    expect(store.error).toBeNull();
+    expect(store.isLoading).toBe(false);
+  });
+
+  it("runs inference and reveals the selected model's labels on completion", async () => {
+    const store = storeWithApi();
+    store.models = [
+      model({
+        labelMap: {
+          "1": { name: "liver", color: "#d94f3d" },
+          "2": { name: "tumour", color: "#aabbcc" },
+        },
+      }),
+    ];
+    store.selectedModelId = "m1";
+    store.segmentation = {
+      id: "previous",
+      inferenceRunId: "previous-run",
+      dims: [1, 1, 1],
+      labelStats: {},
+      download: "previous.bin",
+    };
+
+    const job = {
+      id: "job-1",
+      kind: "inference" as const,
+      status: "queued" as const,
+      progress: 0,
+      stage: null,
+      createdAt: "",
+      finishedAt: null,
+      error: null,
+    };
+    api.runInference.mockResolvedValue(job);
+    await expect(
+      store.runInference({ modelId: "m1", volumeAssetId: "volume-1" }, "key-1"),
+    ).resolves.toBe(job);
+    expect(api.runInference).toHaveBeenCalledWith(
+      { modelId: "m1", volumeAssetId: "volume-1" },
+      "key-1",
+    );
+    expect(store.segmentation).toBeNull();
+    expect(store.isRunning).toBe(true);
+
+    const segmentation = {
+      id: "segmentation-1",
+      inferenceRunId: "job-1",
+      dims: [1, 1, 1] as [number, number, number],
+      labelStats: {},
+      download: "segmentation.bin",
+    };
+    api.getSegmentation.mockResolvedValue(segmentation);
+    await expect(store.fetchSegmentation("job-1")).resolves.toBe(segmentation);
+    expect(store.segmentation).toEqual(segmentation);
+    expect([...store.visibleLabels].sort()).toEqual([1, 2]);
+  });
+
+  it("handles label visibility and job updates in empty-selection states", () => {
+    const store = storeWithApi();
+
+    store.showAllLabels();
+    store.setLabelVisible(4, true);
+    store.setLabelVisible(4, false);
+    expect(store.visibleLabels.has(4)).toBe(false);
+
+    store.updateJob({
+      id: "job-1",
+      kind: "inference",
+      status: "running",
+      progress: 0.5,
+      stage: null,
+      createdAt: "",
+      finishedAt: null,
+      error: null,
+    });
+    expect(store.activeJob?.id).toBe("job-1");
   });
 });

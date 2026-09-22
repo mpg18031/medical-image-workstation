@@ -88,7 +88,29 @@ test-unit: ## Vitest
 	cd desktop && npm run test:unit
 
 test-component: ## Storybook interaction + a11y tests
-	cd desktop && npm run test:component
+	cd desktop && npm run build-storybook
+	cd desktop && { \
+		if curl -fsS http://127.0.0.1:6006/index.json >/dev/null 2>&1; then \
+			echo "A server is already responding on port 6006; stop it before running component tests"; \
+			exit 1; \
+		fi; \
+		python3 -m http.server 6006 --bind 127.0.0.1 --directory storybook-static >/dev/null 2>&1 & \
+		server_pid=$$!; \
+		trap 'kill "$$server_pid" 2>/dev/null || true; wait "$$server_pid" 2>/dev/null || true' EXIT; \
+		for attempt in {1..30}; do \
+			if ! kill -0 "$$server_pid" 2>/dev/null; then \
+				echo "Storybook static server exited before becoming ready"; \
+				exit 1; \
+			fi; \
+			if curl -fsS http://127.0.0.1:6006/index.json >/dev/null 2>&1; then break; fi; \
+			sleep 1; \
+		done; \
+		curl -fsS http://127.0.0.1:6006/index.json >/dev/null || { \
+			echo "Storybook static server did not become ready on port 6006"; \
+			exit 1; \
+		}; \
+		npm run test:component; \
+	}
 
 test-e2e: ## Playwright driving Electron
 	cd desktop && npm run test:e2e
