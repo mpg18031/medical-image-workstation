@@ -7,13 +7,14 @@ and are capped per user.
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 from fastapi import APIRouter, status
 
 from mivw_api.db import write_audit
 from mivw_api.problems import NotFound, QuarantinedSeries
-from mivw_api.repositories import StudyRepository
-from mivw_api.schemas.job import RenderSession, RenderSessionCreate
+from mivw_api.repositories import ModelRepository, StudyRepository
+from mivw_api.schemas.job import AttachSegmentationRequest, RenderSession, RenderSessionCreate
 from mivw_api.security import RequireViewer
 from mivw_api.services.core_runtime import get_core_runtime
 from mivw_api.services.deps import Storage, TenantConn
@@ -110,3 +111,77 @@ async def close_render_session(
         resource_type="render_session",
         resource_id=session_id,
     )
+
+
+@router.post(
+    "/sessions/{session_id}/segmentation",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Composite a completed run's segmentation onto an open session",
+)
+async def attach_segmentation(
+    session_id: uuid.UUID,
+    payload: AttachSegmentationRequest,
+    principal: RequireViewer,
+    conn: TenantConn,
+    storage: Storage,
+) -> None:
+    core = get_core_runtime()
+    core.require_core()
+
+    row = await conn.fetchrow(
+        """
+        SELECT s.object_key, s.content_sha256, s.dims, r.model_id, va.spacing_mm
+        FROM segmentation s
+        JOIN inference_run r ON r.id = s.inference_run_id
+        JOIN volume_asset va ON va.id = r.volume_asset_id
+        WHERE s.inference_run_id = $1
+        """,
+        payload.inference_run_id,
+    )
+    if row is None:
+        raise NotFound("No segmentation for this run")
+
+    model = await ModelRepository(conn).get(row["model_id"])
+    if model is None:
+        raise NotFound("No such model")
+
+    mask_bytes = await storage.get_object(
+        row["object_key"], expected_sha256=bytes(row["content_sha256"])
+    )
+
+    await core.attach_segmentation(
+        session_id=session_id,
+        owner_id=principal.user_id,
+        mask_bytes=mask_bytes,
+        dims=tuple(row["dims"]),
+        spacing_mm=tuple(row["spacing_mm"]),
+        label_colours=_label_colours(model.label_map),
+    )
+
+    await write_audit(
+        conn,
+        org_id=principal.org_id,
+        actor_id=principal.user_id,
+        action="render.segmentation_attach",
+        resource_type="render_session",
+        resource_id=session_id,
+        context={"inference_run_id": str(payload.inference_run_id)},
+    )
+
+
+def _label_colours(label_map: dict[str, Any]) -> list[tuple[float, float, float, float]]:
+    """Builds a dense colour LUT indexed by label id; index 0 (background) stays transparent."""
+    if not label_map:
+        return [(0.0, 0.0, 0.0, 0.0)]
+
+    max_index = max(int(key) for key in label_map)
+    colours = [(0.0, 0.0, 0.0, 0.0)] * (max_index + 1)
+    for key, info in label_map.items():
+        colours[int(key)] = _hex_to_rgba(info.color)
+    return colours
+
+
+def _hex_to_rgba(hex_color: str) -> tuple[float, float, float, float]:
+    hex_color = hex_color.lstrip("#")
+    r, g, b = (int(hex_color[i : i + 2], 16) / 255.0 for i in (0, 2, 4))
+    return (r, g, b, 1.0)

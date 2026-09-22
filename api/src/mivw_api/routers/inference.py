@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import uuid
 from typing import Annotated, Any
 
@@ -58,6 +59,25 @@ async def create_inference_run(
     )
     assert row is not None
 
+    # The job and its inference run share an id, so the handle returned here
+    # doubles as the id the client polls/queries at GET /inference-runs/{id}.
+    # ON CONFLICT: the job upsert above is idempotent-retry safe; this must be too.
+    await conn.execute(
+        """
+        INSERT INTO inference_run
+            (id, org_id, model_id, volume_asset_id, input_sha256, model_sha256, requested_by)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ON CONFLICT (id) DO NOTHING
+        """,
+        row["id"],
+        principal.org_id,
+        payload.model_id,
+        payload.volume_asset_id,
+        bytes(asset["content_sha256"]),
+        bytes.fromhex(model.artifact_sha256),
+        principal.user_id,
+    )
+
     await write_audit(
         conn,
         org_id=principal.org_id,
@@ -68,6 +88,11 @@ async def create_inference_run(
         context={"model": f"{model.name}:{model.version}"},
     )
 
+    # asyncpg hands jsonb back as text (no decoder codec is registered in
+    # create_pool); the schema below expects a dict, so decode first.
+    raw_error = row["error"]
+    error = json.loads(raw_error) if isinstance(raw_error, str) else raw_error
+
     return Job(
         id=row["id"],
         kind=JobKind(row["kind"]),
@@ -76,7 +101,7 @@ async def create_inference_run(
         stage=row["stage"],
         created_at=row["created_at"],
         finished_at=row["finished_at"],
-        error=row["error"],
+        error=error,
     )
 
 
@@ -96,6 +121,10 @@ async def get_run(run_id: uuid.UUID, principal: RequireViewer, conn: TenantConn)
 
     from mivw_api.schemas.model import RunProvenance
 
+    # jsonb arrives as text from asyncpg; decode before validation.
+    raw_metrics = row["metrics"]
+    metrics = json.loads(raw_metrics) if isinstance(raw_metrics, str) else (raw_metrics or {})
+
     return InferenceRun(
         id=row["id"],
         model_id=row["model_id"],
@@ -111,7 +140,7 @@ async def get_run(run_id: uuid.UUID, principal: RequireViewer, conn: TenantConn)
             driver_version=row["driver_version"],
             runtime_version=row["runtime_version"],
         ),
-        metrics=row["metrics"] or {},
+        metrics=metrics,
     )
 
 
@@ -131,18 +160,22 @@ async def get_segmentation(
     if row is None:
         raise NotFound("No segmentation for this run")
 
+    # jsonb arrives as text from asyncpg; decode before validation.
+    raw_stats = row["label_stats"]
+    label_stats = json.loads(raw_stats) if isinstance(raw_stats, str) else (raw_stats or {})
+
     return SegmentationResult(
         id=row["id"],
         inference_run_id=row["inference_run_id"],
         dims=tuple(row["dims"]),
-        label_stats=row["label_stats"] or {},
+        label_stats=label_stats,
         download=row["object_key"],
     )
 
 
 async def _find_volume(conn: Any, volume_asset_id: uuid.UUID) -> Any:
     return await conn.fetchrow(
-        "SELECT id, dims, spacing_mm, direction FROM volume_asset WHERE id = $1",
+        "SELECT id, dims, spacing_mm, direction, content_sha256 FROM volume_asset WHERE id = $1",
         volume_asset_id,
     )
 

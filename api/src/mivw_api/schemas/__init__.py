@@ -9,6 +9,7 @@ from mivw_api.schemas.annotation import (
 )
 from mivw_api.schemas.common import Page, Schema, Vec3, decode_cursor, encode_cursor
 from mivw_api.schemas.job import (
+    AttachSegmentationRequest,
     IngestSession,
     IngestSessionCreate,
     Job,
@@ -43,6 +44,7 @@ __all__ = [
     "AnnotationKind",
     "AnnotationPayload",
     "AnnotationUpdate",
+    "AttachSegmentationRequest",
     "InferenceRequest",
     "InferenceRun",
     "IngestSession",

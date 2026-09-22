@@ -43,6 +43,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     from mivw_api.db import create_pool
     from mivw_api.services.core_runtime import CoreRuntime, set_core_runtime
+    from mivw_api.services.job_worker import JobWorker
     from mivw_api.storage import ObjectStore
 
     app.state.pool = await create_pool(settings)
@@ -51,10 +52,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     set_core_runtime(app.state.core)
     await app.state.core.warm_up()
 
+    app.state.job_worker = JobWorker(app.state.pool, app.state.core, app.state.storage)
+    app.state.job_worker.start()
+
     log.info("api.started", mode=settings.mode, gpu_device=settings.gpu_device)
     try:
         yield
     finally:
+        await app.state.job_worker.stop()
         await app.state.core.shutdown()
         await app.state.pool.close()
         log.info("api.stopped")

@@ -142,9 +142,49 @@ async def seed(dsn: str) -> int:
             async with conn.transaction():
                 await conn.execute(path.read_text(encoding="utf-8"))
         await seed_volume_objects()
+        await seed_model_objects(conn)
         return 0
     finally:
         await conn.close()
+
+
+async def seed_model_objects(conn: asyncpg.Connection) -> None:
+    """Uploads a real ONNX artefact for the seeded liver-seg registry entry.
+
+    The SQL seed's `artifact_sha256` is a placeholder, not derived from real
+    bytes, so inference against it 404s (NoSuchKey) or fails digest
+    verification. Reuses the core test suite's tiny ONNX fixture (same input
+    shape as the seeded model) and corrects the digest to match what was
+    actually uploaded, rather than hand-keeping two files in sync.
+    """
+    key = "models/liver-seg-1.4.0.onnx"
+    fixture = REPO_ROOT / "core" / "tests" / "fixtures" / "models" / "tiny_seg.onnx"
+    payload = fixture.read_bytes()
+    digest = hashlib.sha256(payload).digest()
+
+    endpoint = os.environ.get("MIVW_OBJECT_ENDPOINT", "http://localhost:9000")
+    bucket = os.environ.get("MIVW_OBJECT_BUCKET", "mivw-volumes")
+    access_key = os.environ.get("AWS_ACCESS_KEY_ID", "mivwdev")
+    secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY", "devonly_not_for_deployment")
+
+    session = aioboto3.Session()
+    async with session.client(
+        "s3",
+        endpoint_url=endpoint,
+        region_name=os.environ.get("MIVW_OBJECT_REGION", "us-east-1"),
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+    ) as client:
+        try:
+            await client.create_bucket(Bucket=bucket)
+        except client.exceptions.BucketAlreadyOwnedByYou:
+            pass
+        await client.put_object(Bucket=bucket, Key=key, Body=payload)
+        print(f"uploaded {key}")
+
+    await conn.execute(
+        "UPDATE model SET artifact_sha256 = $1 WHERE artifact_key = $2", digest, key
+    )
 
 
 async def seed_volume_objects() -> None:

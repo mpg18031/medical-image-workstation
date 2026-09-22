@@ -15,6 +15,7 @@ export interface ViewportApi {
     height: number,
   ): Promise<RenderSession>;
   closeSession(sessionId: string): Promise<void>;
+  attachSegmentation(sessionId: string, inferenceRunId: string): Promise<void>;
 }
 
 const MIN_WINDOW_WIDTH = 1;
@@ -37,6 +38,7 @@ export const useViewportStore = defineStore("viewport", () => {
     "idle" | "connecting" | "open" | "reconnecting" | "closed"
   >("idle");
   const sessionId = ref<string | null>(null);
+  const segmentationActive = ref(false);
 
   let api: ViewportApi | null = null;
   let detachFrame: (() => void) | null = null;
@@ -104,6 +106,7 @@ export const useViewportStore = defineStore("viewport", () => {
       await api.closeSession(sessionId.value).catch(() => undefined);
     }
     sessionId.value = null;
+    segmentationActive.value = false;
     connectionState.value = "closed";
   }
 
@@ -211,12 +214,22 @@ export const useViewportStore = defineStore("viewport", () => {
     globalThis.window.mivw.sendWindowLevel(next.center, width);
   }
 
+  /** Pushes a completed inference run's mask onto the open session and shows it. */
+  async function attachSegmentation(inferenceRunId: string): Promise<void> {
+    if (!api) throw new Error("viewport store has no API client");
+    if (!sessionId.value) return;
+    await api.attachSegmentation(sessionId.value, inferenceRunId);
+    segmentationActive.value = true;
+    globalThis.window.mivw.sendLayers(true, 0.45);
+  }
+
   function reset(): void {
     currentFrame.value?.close();
     currentFrame.value = null;
     currentSeq.value = 0;
     droppedFrames.value = 0;
     streamError.value = null;
+    segmentationActive.value = false;
     connectionState.value = "idle";
   }
 
@@ -230,6 +243,7 @@ export const useViewportStore = defineStore("viewport", () => {
     streamError,
     connectionState,
     sessionId,
+    segmentationActive,
     frameTimeMs,
     isInteractive,
     useApi,
@@ -241,6 +255,7 @@ export const useViewportStore = defineStore("viewport", () => {
     orbit,
     centerOn,
     setWindow,
+    attachSegmentation,
     reset,
   };
 });

@@ -9,6 +9,7 @@ const props = withDefaults(
     frameTimeMs?: number;
     droppedFrames?: number;
     showOverlay?: boolean;
+    segmentationActive?: boolean;
     connectionState?:
       "idle" | "connecting" | "open" | "reconnecting" | "closed";
   }>(),
@@ -18,6 +19,7 @@ const props = withDefaults(
     frameTimeMs: 0,
     droppedFrames: 0,
     showOverlay: true,
+    segmentationActive: false,
     connectionState: "idle",
   },
 );
@@ -150,6 +152,15 @@ onBeforeUnmount(() => {
     </div>
 
     <div
+      v-if="segmentationActive"
+      class="volume-canvas__banner volume-canvas__banner--top-left"
+      role="status"
+      data-testid="segmentation-overlay"
+    >
+      Segmentation overlay
+    </div>
+
+    <div
       v-if="showOverlay"
       class="volume-canvas__stats"
       data-testid="volume-canvas-stats"
@@ -207,5 +218,10 @@ onBeforeUnmount(() => {
   background: rgba(0, 0, 0, 0.75);
   display: flex;
   align-items: center;
+
+  &--top-left {
+    left: 8px;
+    transform: none;
+  }
 }
 </style>

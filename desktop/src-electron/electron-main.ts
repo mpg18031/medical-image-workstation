@@ -218,6 +218,11 @@ function registerIpcHandlers(): void {
     renderSocket?.send(JSON.stringify({ type: "window", ...windowLevel }));
   });
 
+  ipcMain.on("render:layers", (_event, payload: string) => {
+    const layers = JSON.parse(payload) as object;
+    renderSocket?.send(JSON.stringify({ type: "layers", ...layers }));
+  });
+
   ipcMain.handle("ingest:pick-files", async () => {
     if (!mainWindow) return [];
     const result = await dialog.showOpenDialog(mainWindow, {

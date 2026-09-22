@@ -39,6 +39,7 @@ dev = [
     "pip-audit>=2.7",
     "sqlfluff>=3.2",
     "pydicom>=3.0",
+    "onnx>=1.16",
 ]
 
 [tool.hatch.build.targets.wheel]

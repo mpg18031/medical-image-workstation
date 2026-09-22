@@ -23,9 +23,9 @@
         <div class='clearfix'>
 
             <div class='fl pad1y space-right2'>
-                <span class="strong">94.33% </span>
+                <span class="strong">93.91% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>100/106</span>
+                <span class='fraction'>108/115</span>
             </div>
 
 
@@ -44,9 +44,9 @@
 
 
             <div class='fl pad1y space-right2'>
-                <span class="strong">94.33% </span>
+                <span class="strong">93.91% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>100/106</span>
+                <span class='fraction'>108/115</span>
             </div>
 
 
@@ -231,7 +231,16 @@
 <a name='L166'></a><a href='#L166'>166</a>
 <a name='L167'></a><a href='#L167'>167</a>
 <a name='L168'></a><a href='#L168'>168</a>
-<a name='L169'></a><a href='#L169'>169</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L169'></a><a href='#L169'>169</a>
+<a name='L170'></a><a href='#L170'>170</a>
+<a name='L171'></a><a href='#L171'>171</a>
+<a name='L172'></a><a href='#L172'>172</a>
+<a name='L173'></a><a href='#L173'>173</a>
+<a name='L174'></a><a href='#L174'>174</a>
+<a name='L175'></a><a href='#L175'>175</a>
+<a name='L176'></a><a href='#L176'>176</a>
+<a name='L177'></a><a href='#L177'>177</a>
+<a name='L178'></a><a href='#L178'>178</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -252,10 +261,10 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">3x</span>
@@ -279,8 +288,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -328,6 +337,8 @@
 <span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">10x</span>
@@ -338,11 +349,15 @@
 <span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -380,6 +395,9 @@
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -421,7 +439,7 @@ export class ApiError extends Error {
 &nbsp;
   constructor(problem: ProblemDetail) {
     super(problem.title);
-    this.name = 'ApiError';
+    this.name = "ApiError";
     this.problem = problem;
   }
 &nbsp;
@@ -452,7 +470,7 @@ export class ApiError extends Error {
 }
 &nbsp;
 export interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: unknown;
   query?: Record&lt;string, string | number | boolean | undefined&gt;;
   idempotencyKey?: string;
@@ -475,7 +493,7 @@ export class ApiClient {
   private readonly fetchImpl: typeof fetch;
 &nbsp;
   constructor(options: ApiClientOptions) {
-    this.baseUrl = options.baseUrl.replace(/\/$/, '');
+    this.baseUrl = options.baseUrl.replace(/\/$/, "");
     this.getToken = options.getToken;
     this.onUnauthenticated = options.onUnauthenticated;
     this.fetchImpl = options.<span class="branch-0 cbranch-no" title="branch not covered" >fetchImpl ?? globalThis.fetch.bind(globalThis);</span>
@@ -485,32 +503,38 @@ export class ApiClient {
     const url = new URL(`${this.baseUrl}/api/v1${path}`);
 &nbsp;
     for (const [key, value] of Object.entries(options.query ?? {})) {
-      if (value !== undefined &amp;&amp; value !== '') {
+      if (value !== undefined &amp;&amp; value !== "") {
         url.searchParams.set(key, String(value));
       }
     }
 &nbsp;
-    const headers: Record&lt;string, string&gt; = { Accept: 'application/json' };
+    const headers: Record&lt;string, string&gt; = { Accept: "application/json" };
 &nbsp;
     const token = await this.getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
-    if (options.body !== undefined) headers['Content-Type'] = 'application/json';
-    if (options.idempotencyKey) headers['Idempotency-Key'] = options.idempotencyKey;
+    if (options.body !== undefined)
+      headers["Content-Type"] = "application/json";
+    if (options.idempotencyKey)
+      headers["Idempotency-Key"] = options.idempotencyKey;
 &nbsp;
     let response: Response;
     try {
       response = await this.fetchImpl(url.toString(), {
-        method: options.<span class="branch-0 cbranch-no" title="branch not covered" >method ?? 'GET',</span>
+        method: options.<span class="branch-0 cbranch-no" title="branch not covered" >method ?? "GET",</span>
         headers,
-        body: options.body === undefined ? undefined : JSON.stringify(options.body),
+        body:
+          options.body === undefined ? undefined : JSON.stringify(options.body),
         ...(options.<span class="branch-0 cbranch-no" title="branch not covered" >signal ? { signal: options.signal } : {</span>}),
       });
     } catch (caught) {
       throw new ApiError({
-        type: 'https://mivw.local/problems/service-unavailable',
-        title: 'Workstation API unavailable',
+        type: "https://mivw.local/problems/service-unavailable",
+        title: "Workstation API unavailable",
         status: 503,
-        detail: caught instanceof Error ? caught.<span class="branch-0 cbranch-no" title="branch not covered" >message : 'Unable to reach the workstation API',</span>
+        detail:
+          caught instanceof Error
+            ? caught.<span class="branch-0 cbranch-no" title="branch not covered" >message</span>
+<span class="cstat-no" title="statement not covered" >            : "Unable to reach the workstation API",</span>
       });
     }
 &nbsp;
@@ -529,7 +553,7 @@ export class ApiClient {
     try {
       const body = (await response.json()) as Partial&lt;ProblemDetail&gt;;
       return {
-        type: body.type ?? 'about:blank',
+        type: body.type ?? "about:blank",
         title: body.<span class="branch-0 cbranch-no" title="branch not covered" >title ?? response.statusText,</span>
         status: body.<span class="branch-0 cbranch-no" title="branch not covered" >status ?? response.status,</span>
         ...(body.detail !== <span class="branch-0 cbranch-no" title="branch not covered" >undefined ? { detail: body.detail } : {</span>}),
@@ -540,31 +564,34 @@ export class ApiClient {
       // A proxy or gateway may return HTML; synthesise a usable problem rather
       // than surfacing a JSON parse error to the user.
       return {
-        type: 'about:blank',
-        title: response.<span class="branch-0 cbranch-no" title="branch not covered" >statusText || 'Request failed',</span>
+        type: "about:blank",
+        title: response.<span class="branch-0 cbranch-no" title="branch not covered" >statusText || "Request failed",</span>
         status: response.status,
       };
     }
   }
 &nbsp;
-  get&lt;T&gt;(path: string, query?: RequestOptions['query']): Promise&lt;T&gt; {
-    return this.request&lt;T&gt;(path, { method: 'GET', ...(query ? { query } : {}) });
+  get&lt;T&gt;(path: string, query?: RequestOptions["query"]): Promise&lt;T&gt; {
+    return this.request&lt;T&gt;(path, {
+      method: "GET",
+      ...(query ? { query } : {}),
+    });
   }
 &nbsp;
   post&lt;T&gt;(path: string, body?: unknown, idempotencyKey?: string): Promise&lt;T&gt; {
     return this.request&lt;T&gt;(path, {
-      method: 'POST',
+      method: "POST",
       body,
       ...(idempotencyKey ? { idempotencyKey <span class="branch-0 cbranch-no" title="branch not covered" >} : {}),</span>
     });
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  patch&lt;T&gt;(path: string, body: unknown): Promise&lt;T&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    return this.request&lt;T&gt;(path, { method: 'PATCH', body });</span>
+<span class="cstat-no" title="statement not covered" >    return this.request&lt;T&gt;(path, { method: "PATCH", body });</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   delete&lt;T = void&gt;(path: string): Promise&lt;T&gt; {
-    return this.request&lt;T&gt;(path, { method: 'DELETE' });
+    return this.request&lt;T&gt;(path, { method: "DELETE" });
   }
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -574,7 +601,7 @@ export class ApiClient {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-09-09T02:14:51.667Z
+                at 2026-09-11T16:38:21.167Z
             </div>
         <script src="../prettify.js"></script>
         <script>

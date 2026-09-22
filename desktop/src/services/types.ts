@@ -119,3 +119,11 @@ export interface Job {
   finishedAt: string | null;
   error: Record<string, unknown> | null;
 }
+
+export interface SegmentationResult {
+  id: string;
+  inferenceRunId: string;
+  dims: [number, number, number];
+  labelStats: Record<string, { voxelCount: number; volumeMl: number }>;
+  download: string;
+}

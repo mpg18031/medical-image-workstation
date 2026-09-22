@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import sys
 import types
 import uuid
@@ -162,8 +163,9 @@ async def test_storage_helpers_and_integrity(monkeypatch):
     store = storage.ObjectStore(settings)
     client = FakeStorageClient()
 
+    @contextlib.asynccontextmanager
     async def fake_client():
-        return client
+        yield client
 
     monkeypatch.setattr(store, "_client", fake_client)
     digest = store.digest(b"payload")

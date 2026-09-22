@@ -80,6 +80,11 @@ repos:
     hooks:
       - id: prettier
         files: ^desktop/.*\.(ts|vue|json|scss|md)$
+        # `system` node is unusable here: npm 11.12.x rejects the
+        # `--allow-git=root` install of this mirror's git placeholder package
+        # (EALLOWGIT), so let nodeenv provision a node whose npm (11.19) accepts
+        # it. Bump together with `rev` above when updating prettier.
+        language_version: "26.8.1"
 
   - repo: local
     hooks:

@@ -84,3 +84,7 @@ class RenderSession(Schema):
     websocket_path: str
     expires_at: datetime
     gpu_memory_bytes: int
+
+
+class AttachSegmentationRequest(Schema):
+    inference_run_id: uuid.UUID

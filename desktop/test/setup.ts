@@ -16,6 +16,7 @@ export interface MivwBridgeMock {
   disconnectRenderStream: ReturnType<typeof vi.fn>;
   sendCamera: ReturnType<typeof vi.fn>;
   sendWindowLevel: ReturnType<typeof vi.fn>;
+  sendLayers: ReturnType<typeof vi.fn>;
   onFrame: ReturnType<typeof vi.fn>;
   onStreamError: ReturnType<typeof vi.fn>;
   pickFilesForIngest: ReturnType<typeof vi.fn>;
@@ -28,6 +29,7 @@ function makeBridge(): MivwBridgeMock {
     disconnectRenderStream: vi.fn(async () => undefined),
     sendCamera: vi.fn(),
     sendWindowLevel: vi.fn(),
+    sendLayers: vi.fn(),
     onFrame: vi.fn(() => () => undefined),
     onStreamError: vi.fn(() => () => undefined),
     pickFilesForIngest: vi.fn(async () => []),

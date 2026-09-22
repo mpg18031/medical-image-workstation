@@ -1,5 +1,6 @@
 import { defineBoot } from "#q-app/wrappers";
 import { ApiClient } from "src/services/apiClient";
+import { WsTransport } from "src/services/wsTransport";
 import { useStudiesStore } from "src/stores/studies";
 import { useAnnotationsStore } from "src/stores/annotations";
 import { useModelsStore } from "src/stores/models";
@@ -12,6 +13,7 @@ import type {
   Page,
   RenderSession,
   Role,
+  SegmentationResult,
   SeriesDetail,
   StudySummary,
 } from "src/services/types";
@@ -25,16 +27,20 @@ interface AccessTokenClaims {
   preferred_username?: string;
 }
 
+const API_ORIGIN = process.env.MIVW_API_ORIGIN ?? "http://127.0.0.1:8000";
+
 /** Wires the API client into every store that needs it. */
 export default defineBoot(async () => {
   const auth = useAuthStore();
   await signInForLocalDevelopment(auth);
 
   const client = new ApiClient({
-    baseUrl: process.env.MIVW_API_ORIGIN ?? "http://127.0.0.1:8000",
+    baseUrl: API_ORIGIN,
     getToken: () => getValidAccessToken(auth),
     onUnauthenticated: () => auth.signOut(),
   });
+
+  const models = useModelsStore();
 
   useStudiesStore().useApi({
     listStudies: (query) => client.get<Page<StudySummary>>("/studies", query),
@@ -51,9 +57,11 @@ export default defineBoot(async () => {
     remove: (id) => client.delete(`/annotations/${id}`),
   });
 
-  useModelsStore().useApi({
+  models.useApi({
     list: () => client.get<ModelDetail[]>("/models"),
     runInference: (body, key) => client.post<Job>("/inference-runs", body, key),
+    getSegmentation: (runId) =>
+      client.get<SegmentationResult>(`/inference-runs/${runId}/segmentation`),
   });
 
   useViewportStore().useApi({
@@ -64,8 +72,38 @@ export default defineBoot(async () => {
         height,
       }),
     closeSession: (sessionId) => client.delete(`/render/sessions/${sessionId}`),
+    attachSegmentation: (sessionId, inferenceRunId) =>
+      client.post<void>(`/render/sessions/${sessionId}/segmentation`, {
+        inferenceRunId,
+      }),
   });
+
+  if (auth.session) connectJobsSocket(auth.session.accessToken, models);
 });
+
+/**
+ * Job progress/completion push channel.
+ *
+ * Without this, `models.activeJob` is set once at submission and never
+ * updated again: the job table's own state transitions (queued -> running ->
+ * succeeded/failed) would otherwise never reach the UI, so "Run Model" would
+ * appear to spin forever even once the backend finishes the job.
+ */
+function connectJobsSocket(
+  accessToken: string,
+  models: ReturnType<typeof useModelsStore>,
+): void {
+  const wsOrigin = API_ORIGIN.replace(/^http/, "ws");
+  const transport = new WsTransport({
+    url: `${wsOrigin}/ws/jobs?token=${encodeURIComponent(accessToken)}`,
+  });
+  transport.connect({
+    onText: (data) => {
+      if (data && typeof data === "object" && "id" in data && "status" in data)
+        models.updateJob(data as Job);
+    },
+  });
+}
 
 async function signInForLocalDevelopment(
   auth: ReturnType<typeof useAuthStore>,

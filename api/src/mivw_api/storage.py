@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import hashlib
 import os
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any, cast
 
@@ -48,36 +50,39 @@ class ObjectStore:
         return hashlib.sha256(payload).digest()
 
     async def presign_get(self, key: str) -> str:
-        client = await self._client()
-        return cast(
-            str,
-            await client.generate_presigned_url(
-                "get_object",
-                Params={"Bucket": self._bucket, "Key": key},
-                ExpiresIn=self._ttl,
-            ),
-        )
+        async with self._client() as client:
+            return cast(
+                str,
+                await client.generate_presigned_url(
+                    "get_object",
+                    Params={"Bucket": self._bucket, "Key": key},
+                    ExpiresIn=self._ttl,
+                ),
+            )
 
     async def presign_put(self, key: str, *, max_bytes: int) -> str:
-        client = await self._client()
-        return cast(
-            str,
-            await client.generate_presigned_url(
-                "put_object",
-                Params={
-                    "Bucket": self._bucket,
-                    "Key": key,
-                    "ContentLength": max_bytes,
-                    "ServerSideEncryption": "aws:kms",
-                },
-                ExpiresIn=self._ttl,
-            ),
-        )
+        mode = getattr(self._settings.mode, "value", self._settings.mode)
+        params: dict[str, Any] = {
+            "Bucket": self._bucket,
+            "Key": key,
+            "ContentLength": max_bytes,
+        }
+        if mode != "local":
+            params["ServerSideEncryption"] = "aws:kms"
+        async with self._client() as client:
+            return cast(
+                str,
+                await client.generate_presigned_url(
+                    "put_object",
+                    Params=params,
+                    ExpiresIn=self._ttl,
+                ),
+            )
 
     async def get_object(self, key: str, *, expected_sha256: bytes | None = None) -> bytes:
-        client = await self._client()
-        response = await client.get_object(Bucket=self._bucket, Key=key)
-        payload: bytes = await response["Body"].read()
+        async with self._client() as client:
+            response = await client.get_object(Bucket=self._bucket, Key=key)
+            payload: bytes = await response["Body"].read()
 
         # Verify on read: the database holds the authoritative hash, so silent
         # corruption or substitution in the object store is caught here.
@@ -90,17 +95,21 @@ class ObjectStore:
         return payload
 
     async def put_object(self, key: str, payload: bytes) -> bytes:
-        client = await self._client()
         digest = hashlib.sha256(payload).digest()
-        await client.put_object(
-            Bucket=self._bucket,
-            Key=key,
-            Body=payload,
-            ServerSideEncryption="aws:kms",
-        )
+        mode = getattr(self._settings.mode, "value", self._settings.mode)
+        put_kwargs: dict[str, Any] = {
+            "Bucket": self._bucket,
+            "Key": key,
+            "Body": payload,
+        }
+        if mode != "local":
+            put_kwargs["ServerSideEncryption"] = "aws:kms"
+        async with self._client() as client:
+            await client.put_object(**put_kwargs)
         return digest
 
-    async def _client(self) -> Any:
+    @asynccontextmanager
+    async def _client(self) -> AsyncIterator[Any]:
         import aioboto3  # type: ignore[import-untyped]
 
         session = aioboto3.Session()
@@ -116,10 +125,8 @@ class ObjectStore:
                     "AWS_SECRET_ACCESS_KEY", "devonly_not_for_deployment"
                 ),
             )
-        return await session.client(
-            "s3",
-            **client_kwargs,
-        ).__aenter__()
+        async with session.client("s3", **client_kwargs) as client:
+            yield client
 
 
 class IntegrityError(RuntimeError):

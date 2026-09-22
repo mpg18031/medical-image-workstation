@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any
 
 import structlog
 
-from mivw_api.problems import GpuUnavailable
+from mivw_api.problems import GpuUnavailable, NotFound
 
 if TYPE_CHECKING:
     from mivw_api.config import Settings
@@ -159,6 +159,95 @@ class CoreRuntime:
 
     def gpu_memory_bytes(self) -> int:
         return sum(getattr(s.renderer, "gpu_memory_bytes", 0) or 0 for s in self._sessions.values())
+
+    async def run_inference(
+        self,
+        *,
+        model: Any,
+        artifact: bytes,
+        raw_volume: bytes,
+        dims: tuple[int, int, int],
+        spacing_mm: tuple[float, float, float],
+    ) -> tuple[bytes, dict[str, Any], dict[str, dict[str, float]]]:
+        """Runs a registered model against a volume via `mivw_core.InferenceRuntime`.
+
+        Returns (segmentation bytes, provenance fields, per-label voxel/volume
+        stats). This is GPU-bound work, so it runs off the event loop.
+        """
+        self.require_core()
+        return await asyncio.to_thread(
+            self._run_inference_sync, model, artifact, raw_volume, dims, spacing_mm
+        )
+
+    def _run_inference_sync(
+        self,
+        model: Any,
+        artifact: bytes,
+        raw_volume: bytes,
+        dims: tuple[int, int, int],
+        spacing_mm: tuple[float, float, float],
+    ) -> tuple[bytes, dict[str, Any], dict[str, dict[str, float]]]:
+        import numpy as np
+
+        volume = mivw_core.Volume(dims, spacing_mm, mivw_core.DType.Int16)
+        voxels = np.frombuffer(raw_volume, dtype=np.int16)
+        volume.as_array()[:] = voxels.reshape(tuple(reversed(dims)))
+
+        runtime = mivw_core.InferenceRuntime()
+        input_spec = model.input_spec.model_dump(by_alias=True)
+        runtime.load_model_bytes(artifact, input_spec)
+
+        output, provenance = runtime.run(input_spec, bytes.fromhex(model.artifact_sha256), volume)
+
+        labels = np.asarray(output.as_array())
+        voxel_volume_ml = (spacing_mm[0] * spacing_mm[1] * spacing_mm[2]) / 1000.0
+        label_stats: dict[str, dict[str, float]] = {}
+        for index in np.unique(labels):
+            if index == 0:
+                continue
+            count = int(np.count_nonzero(labels == index))
+            label_stats[str(int(index))] = {
+                "voxelCount": float(count),
+                "volumeMl": float(count) * voxel_volume_ml,
+            }
+
+        return labels.astype(np.int16).tobytes(), provenance, label_stats
+
+    async def attach_segmentation(
+        self,
+        *,
+        session_id: uuid.UUID,
+        owner_id: uuid.UUID,
+        mask_bytes: bytes,
+        dims: tuple[int, int, int],
+        spacing_mm: tuple[float, float, float],
+        label_colours: list[tuple[float, float, float, float]],
+    ) -> None:
+        """Composites a completed inference run's mask onto an open render session."""
+        self.require_core()
+        async with self._lock:
+            state = self._sessions.get(session_id)
+            if state is None or state.owner_id != owner_id:
+                raise NotFound("No such render session")
+            state.touch()
+        await asyncio.to_thread(
+            self._attach_segmentation_sync, state, mask_bytes, dims, spacing_mm, label_colours
+        )
+
+    def _attach_segmentation_sync(
+        self,
+        state: RenderSessionState,
+        mask_bytes: bytes,
+        dims: tuple[int, int, int],
+        spacing_mm: tuple[float, float, float],
+        label_colours: list[tuple[float, float, float, float]],
+    ) -> None:
+        import numpy as np
+
+        mask = mivw_core.Volume(dims, spacing_mm, mivw_core.DType.Int16)
+        labels = np.frombuffer(mask_bytes, dtype=np.int16)
+        mask.as_array()[:] = labels.reshape(tuple(reversed(dims)))
+        state.renderer.set_segmentation(mask, label_colours)
 
     def _release(self, state: RenderSessionState) -> None:
         state.renderer = None  # RAII on the C++ side frees the device memory
