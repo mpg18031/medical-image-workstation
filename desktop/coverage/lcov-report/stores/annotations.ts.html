@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="../base.css" />
     <link rel="shortcut icon" type="image/x-icon" href="../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="../theme.js"></script>
     <style type='text/css'>
         .coverage-summary .sorter {
             background-image: url(../sort-arrow-sprite.png);
@@ -19,34 +20,44 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
+
+        <label class="theme-select quiet">
+            Theme
+            <select id="themeSelect" autocomplete="off">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="legacy">Legacy</option>
+            </select>
+        </label>
+
         <h1><a href="../index.html">All files</a> / <a href="index.html">stores</a> annotations.ts</h1>
         <div class='clearfix'>
 
             <div class='fl pad1y space-right2'>
-                <span class="strong">91.24% </span>
+                <span class="strong">75.64% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>125/137</span>
+                <span class='fraction'>59/78</span>
             </div>
 
 
             <div class='fl pad1y space-right2'>
-                <span class="strong">69.69% </span>
+                <span class="strong">63.63% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>23/33</span>
+                <span class='fraction'>21/33</span>
             </div>
 
 
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">66.66% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>8/10</span>
+                <span class='fraction'>12/18</span>
             </div>
 
 
             <div class='fl pad1y space-right2'>
-                <span class="strong">91.24% </span>
+                <span class="strong">83.33% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>125/137</span>
+                <span class='fraction'>55/66</span>
             </div>
 
 
@@ -61,7 +72,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -257,7 +268,7 @@
 <a name='L192'></a><a href='#L192'>192</a>
 <a name='L193'></a><a href='#L193'>193</a>
 <a name='L194'></a><a href='#L194'>194</a>
-<a name='L195'></a><a href='#L195'>195</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L195'></a><a href='#L195'>195</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -295,11 +306,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">14x</span>
@@ -310,45 +321,45 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
@@ -357,100 +368,100 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import {
@@ -508,14 +519,14 @@ export const useAnnotationsStore = defineStore("annotations", () =&gt; {
     api = client;
   }
 &nbsp;
-  const selected = computed(
-    () =&gt; items.value.find((a) =&gt; a.id === selectedId.value) ?? null,
+  const selected = <span class="fstat-no" title="function not covered" >computed(</span>
+    () =&gt; <span class="cstat-no" title="statement not covered" >items.value.<span class="fstat-no" title="function not covered" >find((a</span>) =&gt; <span class="cstat-no" title="statement not covered" >a.id === selectedId.value)</span> ?? null,</span>
   );
-  const measurements = computed(() =&gt;
-<span class="cstat-no" title="statement not covered" >    items.value.filter((a) =&gt; a.kind === "measurement"),</span>
+  const measurements = <span class="fstat-no" title="function not covered" >computed(() =&gt;</span>
+<span class="cstat-no" title="statement not covered" >    items.value.<span class="fstat-no" title="function not covered" >filter((a</span>) =&gt; <span class="cstat-no" title="statement not covered" >a.kind === "measurement")</span>,</span>
   );
   const draftIsComplete = computed(() =&gt; {
-    if (!draft.value) <span class="branch-0 cbranch-no" title="branch not covered" >return false;</span>
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (!draft.value) <span class="cstat-no" title="statement not covered" >return false;</span>
     return draft.value.points.length &gt;= REQUIRED_POINTS[draft.value.kind];
   });
 &nbsp;
@@ -524,7 +535,7 @@ export const useAnnotationsStore = defineStore("annotations", () =&gt; {
   }
 &nbsp;
   function addDraftPoint(point: Vec3): void {
-    if (!draft.value) <span class="branch-0 cbranch-no" title="branch not covered" >return;</span>
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (!draft.value) <span class="cstat-no" title="statement not covered" >return;</span>
     draft.value = { ...draft.value, points: [...draft.value.points, point] };
   }
 &nbsp;
@@ -533,15 +544,15 @@ export const useAnnotationsStore = defineStore("annotations", () =&gt; {
     draft.value = { ...draft.value, points: draft.value.points.slice(0, -1) };
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function cancelDraft(): void {</span>
+  function <span class="fstat-no" title="function not covered" >cancelDraft(): void {</span>
 <span class="cstat-no" title="statement not covered" >    draft.value = null;</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+  }
 &nbsp;
   async function commitDraft(
     seriesId: string,
     label?: string,
   ): Promise&lt;Annotation | null&gt; {
-    if (!api) <span class="branch-0 cbranch-no" title="branch not covered" >throw new Error("annotations store has no API client");</span>
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (!api) <span class="cstat-no" title="statement not covered" >throw new Error("annotations store has no API client");</span>
     if (!draft.value || !draftIsComplete.value) return null;
 &nbsp;
     isSaving.value = true;
@@ -566,16 +577,16 @@ export const useAnnotationsStore = defineStore("annotations", () =&gt; {
     } catch {
       error.value = "Could not save the annotation";
       return null;
-<span class="branch-0 cbranch-no" title="branch not covered" >    } f</span>inally {
+    } finally {
       isSaving.value = false;
     }
   }
 &nbsp;
   async function load(seriesId: string): Promise&lt;void&gt; {
-    if (!api) <span class="branch-0 cbranch-no" title="branch not covered" >throw new Error("annotations store has no API client");</span>
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (!api) <span class="cstat-no" title="statement not covered" >throw new Error("annotations store has no API client");</span>
     error.value = null;
     try {
-      items.value = await api.list(seriesId<span class="branch-0 cbranch-no" title="branch not covered" >);</span>
+      items.value = await api.list(seriesId);
     } catch {
       error.value = "Could not load annotations";
       items.value = [];
@@ -583,7 +594,7 @@ export const useAnnotationsStore = defineStore("annotations", () =&gt; {
   }
 &nbsp;
   async function remove(id: string): Promise&lt;boolean&gt; {
-    if (!api) <span class="branch-0 cbranch-no" title="branch not covered" >throw new Error("annotations store has no API client");</span>
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (!api) <span class="cstat-no" title="statement not covered" >throw new Error("annotations store has no API client");</span>
     const previous = items.value;
     // Optimistic removal, reverted on failure: a lingering annotation the user
     // believes they deleted is worse than a brief flicker.
@@ -591,7 +602,7 @@ export const useAnnotationsStore = defineStore("annotations", () =&gt; {
 &nbsp;
     try {
       await api.remove(id);
-      if (selectedId.value === id) <span class="branch-0 cbranch-no" title="branch not covered" >selectedId.value = null;</span>
+      <span class="missing-if-branch" title="if path not taken" >I</span>if (selectedId.value === id) <span class="cstat-no" title="statement not covered" >selectedId.value = null;</span>
       return true;
     } catch {
       items.value = previous;
@@ -605,10 +616,10 @@ export const useAnnotationsStore = defineStore("annotations", () =&gt; {
     switch (annotation.kind) {
       case "measurement":
         if (points.length === 2) return distanceMm(points[0]!, points[1]!);
-        if (points.length === 3)
-          return angleDegrees(points[0]!, points[1]!, points[2]!<span class="branch-0 cbranch-no" title="branch not covered" >);</span>
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (points.length === 3)
+          return angleDegrees(points[0]!, points[1]!, points[2]!);
 <span class="cstat-no" title="statement not covered" >        return null;</span>
-<span class="branch-0 cbranch-no" title="branch not covered" >      case "roi":</span>
+<span class="branch-1 cbranch-no" title="branch not covered" >      case "roi":</span>
 <span class="cstat-no" title="statement not covered" >        if (points.length === 3)</span>
 <span class="cstat-no" title="statement not covered" >          return ellipseAreaMm2(points[0]!, points[1]!, points[2]!);</span>
 <span class="cstat-no" title="statement not covered" >        return null;</span>
@@ -617,12 +628,12 @@ export const useAnnotationsStore = defineStore("annotations", () =&gt; {
     }
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  function reset(): void {</span>
+  function <span class="fstat-no" title="function not covered" >reset(): void {</span>
 <span class="cstat-no" title="statement not covered" >    items.value = [];</span>
 <span class="cstat-no" title="statement not covered" >    draft.value = null;</span>
 <span class="cstat-no" title="statement not covered" >    selectedId.value = null;</span>
 <span class="cstat-no" title="statement not covered" >    error.value = null;</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+  }
 &nbsp;
   return {
     items,
@@ -652,7 +663,7 @@ export const useAnnotationsStore = defineStore("annotations", () =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-09-11T16:38:21.167Z
+                at 2026-11-04T15:01:51.432Z
             </div>
         <script src="../prettify.js"></script>
         <script>

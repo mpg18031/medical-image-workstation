@@ -1,5 +1,5 @@
-FROM postgres:16
+FROM postgres:18
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends postgresql-16-pgtap \
+    && apt-get install -y --no-install-recommends postgresql-18-pgtap \
     && rm -rf /var/lib/apt/lists/*

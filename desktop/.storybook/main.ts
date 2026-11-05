@@ -5,11 +5,7 @@ import { quasar, transformAssetUrls } from "@quasar/vite-plugin";
 
 const config: StorybookConfig = {
   stories: ["../src/**/*.stories.@(ts|tsx)"],
-  addons: [
-    "@storybook/addon-essentials",
-    "@storybook/addon-interactions",
-    "@storybook/addon-a11y",
-  ],
+  addons: ["@storybook/addon-a11y"],
   framework: { name: "@storybook/vue3-vite", options: {} },
   core: { disableTelemetry: true },
   typescript: { check: false },

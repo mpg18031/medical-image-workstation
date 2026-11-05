@@ -28,7 +28,11 @@ describe("models store", () => {
 
   beforeEach(() => {
     setActivePinia(createPinia());
-    api = { list: vi.fn(), runInference: vi.fn() };
+    api = {
+      list: vi.fn(),
+      runInference: vi.fn(),
+      getSegmentation: vi.fn(),
+    };
   });
 
   function storeWithApi() {

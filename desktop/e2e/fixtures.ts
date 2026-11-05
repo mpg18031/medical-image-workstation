@@ -59,3 +59,4 @@ export async function openFirstStudy(window: Page): Promise<void> {
 }
 
 export { expect, test };
+export type { ElectronApplication, Page };

@@ -35,7 +35,7 @@ const inferenceError = ref<string | null>(null);
 
 const presetNames = computed(() => Object.keys(WINDOW_PRESETS));
 // `process` isn't available inside the compiled template's inline handlers.
-const isE2E = process.env.MIVW_E2E === "1";
+const isE2E = import.meta.env.MIVW_E2E === "1";
 
 let e2eFrameTimer: ReturnType<typeof setInterval> | null = null;
 

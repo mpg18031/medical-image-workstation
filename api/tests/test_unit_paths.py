@@ -155,6 +155,7 @@ def test_key_resolution_local_and_kms(monkeypatch):
 @pytest.mark.asyncio
 async def test_storage_helpers_and_integrity(monkeypatch):
     settings = SimpleNamespace(
+        mode="local",
         object_endpoint="http://object-store/",
         object_bucket="bucket",
         presigned_url_ttl_seconds=30,

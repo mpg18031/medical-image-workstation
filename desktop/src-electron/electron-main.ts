@@ -37,13 +37,7 @@ function contentSecurityPolicy(): string {
 }
 
 function createWindow(): void {
-  const preloadPath = path.resolve(
-    currentDir,
-    path.join(
-      process.env.QUASAR_ELECTRON_PRELOAD_FOLDER!,
-      "electron-preload" + process.env.QUASAR_ELECTRON_PRELOAD_EXTENSION!,
-    ),
-  );
+  const preloadPath = path.join(currentDir, "electron-preload.cjs");
 
   mainWindow = new BrowserWindow({
     width: 1600,
@@ -63,7 +57,11 @@ function createWindow(): void {
   });
 
   mainWindow.once("ready-to-show", () => mainWindow?.show());
-  void mainWindow.loadURL(process.env.APP_URL!);
+  if (import.meta.env.QUASAR_DEV) {
+    void mainWindow.loadURL(import.meta.env.QUASAR_APP_URL);
+  } else {
+    void mainWindow.loadFile("index.html");
+  }
 
   mainWindow.on("closed", () => {
     mainWindow = undefined;
@@ -255,7 +253,11 @@ if (!app.requestSingleInstanceLock()) {
 app.on("web-contents-created", (_event, contents) => {
   // Block in-app navigation away from the packaged origin.
   contents.on("will-navigate", (event, url) => {
-    if (new URL(url).origin !== new URL(process.env.APP_URL!).origin) {
+    const target = new URL(url);
+    const allowed = import.meta.env.QUASAR_DEV
+      ? target.origin === new URL(import.meta.env.QUASAR_APP_URL).origin
+      : target.protocol === "file:";
+    if (!allowed) {
       event.preventDefault();
     }
   });

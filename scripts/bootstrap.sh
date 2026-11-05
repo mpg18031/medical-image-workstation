@@ -22,11 +22,17 @@ require cmake  "https://cmake.org/download/"
 require ninja  "install ninja-build"
 require git    "https://git-scm.com/"
 require docker "https://docs.docker.com/get-docker/"
-require node   "Node.js 20 LTS"
+require node   "Node.js 26 LTS"
 require python3 "Python 3.12"
 
+CMAKE_VERSION="$(cmake --version | sed -n '1s/^cmake version //p')"
+CMAKE_MAJOR="${CMAKE_VERSION%%.*}"
+CMAKE_MINOR="$(printf '%s' "$CMAKE_VERSION" | cut -d. -f2)"
+(( CMAKE_MAJOR > 4 || (CMAKE_MAJOR == 4 && CMAKE_MINOR >= 4) )) \
+  || fail "CMake 4.4 or newer required (found $CMAKE_VERSION)"
+
 NODE_MAJOR="$(node --version | sed 's/^v\([0-9]*\).*/\1/')"
-[[ "$NODE_MAJOR" -ge 20 ]] || fail "Node.js 20 or newer required (found $(node --version))"
+[[ "$NODE_MAJOR" -eq 26 ]] || fail "Node.js 26 required (found $(node --version))"
 
 PY_MINOR="$(python3 -c 'import sys; print(sys.version_info.minor)')"
 [[ "$PY_MINOR" -ge 12 ]] || fail "Python 3.12 or newer required"

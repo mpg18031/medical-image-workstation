@@ -2,7 +2,7 @@ name: mivw
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_DB: mivw
       POSTGRES_USER: postgres
@@ -12,7 +12,7 @@ services:
     ports:
       - "127.0.0.1:5434:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
     command:
       - postgres
       - -c
@@ -28,7 +28,7 @@ services:
       retries: 10
 
   minio:
-    image: minio/minio:latest
+    image: cgr.dev/chainguard/minio:latest
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: mivwdev

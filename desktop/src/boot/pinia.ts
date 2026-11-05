@@ -1,4 +1,4 @@
-import { defineBoot } from "#q-app/wrappers";
+import { defineBoot } from "@quasar/app-vite";
 import { createPinia } from "pinia";
 
 export default defineBoot(({ app }) => {

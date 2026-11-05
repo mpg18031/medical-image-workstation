@@ -38,7 +38,7 @@ graph TB
     end
 
     subgraph DATA["Data — db/ + infra/"]
-        PG[("PostgreSQL 16<br/>RLS · pgcrypto · audit")]
+        PG[("PostgreSQL 18<br/>RLS · pgcrypto · audit")]
         OBJ[("Object store<br/>MinIO / S3, SSE-KMS")]
     end
 
@@ -76,7 +76,7 @@ never blocks. GIL-bound sections are released inside the C++ bindings.
 
 ### 3.3 Compute core — `core/`
 
-C++20, built with CMake and CUDA 12.x. Exposed to Python as a single `mivw_core`
+C++23, built with CMake and CUDA 13.4. Exposed to Python as a single `mivw_core`
 extension module. Owns DICOM parsing, de-identification, volume preprocessing, ONNX/
 TensorRT inference, and the Vulkan renderer. Uses RAII throughout; every GPU allocation is
 owned by a handle type with a deleter, so there is no manual `cudaFree`/`vkDestroy*`.
@@ -93,7 +93,7 @@ which keeps the *same* code path for `local` and `server` modes.
 
 ### 3.5 Data — `db/`, object store
 
-PostgreSQL 16 holds metadata, users, annotations, jobs, and the audit trail. Bulk pixel
+PostgreSQL 18 holds metadata, users, annotations, jobs, and the audit trail. Bulk pixel
 data lives in an object store keyed by a content hash; the database stores only the key.
 This keeps table sizes sane and lets object-level lifecycle/retention policies do the work.
 

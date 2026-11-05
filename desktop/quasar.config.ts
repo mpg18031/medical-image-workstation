@@ -1,4 +1,4 @@
-import { defineConfig } from "#q-app/wrappers";
+import { defineConfig } from "@quasar/app-vite";
 
 export default defineConfig((ctx) => ({
   boot: ["pinia", "bridge"],
@@ -6,11 +6,21 @@ export default defineConfig((ctx) => ({
   extras: ["roboto-font", "material-icons"],
 
   build: {
-    target: { browser: ["es2022"], node: "node20" },
+    target: { browser: ["es2022"], node: "node24" },
     typescript: { strict: true, vueShim: true },
     vueRouterMode: "hash", // file:// in a packaged Electron app has no history API
     sourcemap: ctx.debug,
-    env: {
+    env: { clientPrefix: ["QCLI_", "MIVW_"] },
+    // Quasar CLI v3 only injects "@/"; keep the aliases this codebase imports.
+    alias: {
+      src: ctx.appPaths.srcDir,
+      app: ctx.appPaths.appDir,
+      components: ctx.appPaths.resolve.src("components"),
+      layouts: ctx.appPaths.resolve.src("layouts"),
+      pages: ctx.appPaths.resolve.src("pages"),
+      stores: ctx.appPaths.resolve.src("stores"),
+    },
+    defineEnv: {
       MIVW_API_ORIGIN: process.env.MIVW_API_ORIGIN ?? "http://127.0.0.1:8000",
       MIVW_OIDC_ISSUER:
         process.env.MIVW_OIDC_ISSUER ?? "http://127.0.0.1:8080/realms/mivw",
@@ -48,9 +58,6 @@ export default defineConfig((ctx) => ({
         hardenedRuntime: true,
         gatekeeperAssess: false,
         category: "public.app-category.medical",
-      },
-      win: {
-        signingHashAlgorithms: ["sha256"],
       },
       linux: {
         target: ["AppImage", "deb"],

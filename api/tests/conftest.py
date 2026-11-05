@@ -23,7 +23,7 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 from httpx import ASGITransport, AsyncClient
 from jwt.algorithms import RSAAlgorithm
-from testcontainers.postgres import PostgresContainer
+from testcontainers.community.postgres import PostgresContainer
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MIGRATIONS = sorted((REPO_ROOT / "db" / "migrations").glob("*.sql"))
@@ -164,7 +164,7 @@ def malformed_tokens(signing_key: rsa.RSAPrivateKey, oidc_issuer: str, seeded_or
 # ---------------------------------------------------------------- database
 @pytest.fixture(scope="session")
 def postgres() -> Iterator[PostgresContainer]:
-    with PostgresContainer("postgres:16-alpine", driver=None) as container:
+    with PostgresContainer("postgres:18-alpine", driver=None) as container:
         yield container
 
 

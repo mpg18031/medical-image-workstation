@@ -11,7 +11,6 @@ const {
   studies: rows,
   isLoading,
   error,
-  filters,
   hasMore,
   series,
   selectedStudyId,
