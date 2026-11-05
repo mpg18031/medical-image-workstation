@@ -1,5 +1,7 @@
 # Real-Time Spatial Data Processing & 3D Analytics Workstation (MIVW)
 
+[![CI](https://github.com/mpg18031/medical-image-workstation/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mpg18031/medical-image-workstation/actions/workflows/ci.yml)
+
 > **RESEARCH USE ONLY.** This software is **not** a cleared or approved medical device.
 > It must not be used for primary diagnosis, treatment planning, or any clinical
 > decision-making. See [docs/06-security-compliance.md](docs/06-security-compliance.md).
