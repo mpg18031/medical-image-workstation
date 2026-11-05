@@ -58,7 +58,7 @@ class _OidcRequestHandler(BaseHTTPRequestHandler):
     def log_message(self, format: str, *args: object) -> None:  # noqa: A002
         pass  # Silence the default per-request access log.
 
-    def do_GET(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API
+    def do_get(self) -> None:
         if self.path.endswith("/.well-known/openid-configuration"):
             body = json.dumps(
                 {

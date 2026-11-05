@@ -4,8 +4,8 @@ Generate a professional, copy-paste-ready OpenDocument Text (.odt) for LinkedIn 
 Includes Headline, About Section, Experience, Featured Project, and Core Skills for ATS & Recruiter Search.
 """
 
-import zipfile
 import os
+import zipfile
 
 ODT_FILENAME = "LinkedIn_Profile_Staff_Principal_Systems_Architect.odt"
 

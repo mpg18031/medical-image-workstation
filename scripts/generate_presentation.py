@@ -4,9 +4,9 @@ Generate an executive, publication-grade PowerPoint Case Study Presentation (.pp
 Calibrated for Staff / Principal Systems Architect and Engineering Leadership case study rounds.
 """
 
-import zipfile
-import subprocess
 import os
+import subprocess
+import zipfile
 
 ODP_FILENAME = "MIVW_Systems_Architecture_Case_Study.odp"
 PPTX_FILENAME = "MIVW_Systems_Architecture_Case_Study.pptx"
@@ -585,6 +585,7 @@ def generate_presentation():
     print("Converting to PowerPoint (.pptx)...")
     res_pptx = subprocess.run(
         ["soffice", "--headless", "--convert-to", "pptx", ODP_FILENAME],
+        check=False,
         capture_output=True,
         text=True,
     )
@@ -599,6 +600,7 @@ def generate_presentation():
     print("Converting to PDF (.pdf)...")
     res_pdf = subprocess.run(
         ["soffice", "--headless", "--convert-to", "pdf", ODP_FILENAME],
+        check=False,
         capture_output=True,
         text=True,
     )

@@ -4,8 +4,8 @@ Generate a professional, publication-quality OpenDocument Text (.odt) resume.
 Uses standard library zipfile and generates ODF 1.2 compliant XML.
 """
 
-import zipfile
 import os
+import zipfile
 
 ODT_FILENAME = "Resume_Staff_Principal_Systems_Architect.odt"
 

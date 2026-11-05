@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import base64
-from typing import Annotated, Generic, TypeVar
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-
-T = TypeVar("T")
 
 
 def to_camel(snake: str) -> str:
@@ -30,7 +28,7 @@ class Schema(BaseModel):
     )
 
 
-class Page(Schema, Generic[T]):
+class Page[T](Schema):
     items: list[T]
     next_cursor: str | None = Field(
         default=None,

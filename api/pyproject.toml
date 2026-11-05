@@ -47,7 +47,7 @@ packages = ["src/mivw_api"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py313"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "S", "T20", "SIM", "RUF"]
@@ -58,7 +58,7 @@ ignore = ["N818", "S101"]
 "tests/**" = ["S", "T20"]
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 strict = true
 ignore_missing_imports = true
 warn_unreachable = true

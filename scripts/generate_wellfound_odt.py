@@ -5,9 +5,9 @@ Calibrated for Startup Founders, CTOs, and VPs of Engineering seeking Staff/Prin
 or Founding Systems Engineers in AI Infrastructure, Spatial Computing, and High-Performance Systems.
 """
 
-import zipfile
 import os
 import subprocess
+import zipfile
 
 ODT_FILENAME = "Wellfound_Profile_Staff_Principal_Systems_Architect.odt"
 PDF_FILENAME = "Wellfound_Profile_Staff_Principal_Systems_Architect.pdf"
@@ -256,6 +256,7 @@ def generate_odt():
     print("Converting to PDF...")
     res_pdf = subprocess.run(
         ["soffice", "--headless", "--convert-to", "pdf", ODT_FILENAME],
+        check=False,
         capture_output=True,
         text=True,
     )
