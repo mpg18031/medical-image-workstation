@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 
-import asyncpg  # type: ignore[import-untyped]
+import asyncpg
 
 from mivw_api.schemas.model import InputSpec, LabelInfo, ModelCreate, ModelDetail
 

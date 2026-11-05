@@ -50,7 +50,7 @@ async def create_render_session(
         raise NotFound("No volume has been reconstructed for this series")
     info, object_key, content_sha256 = asset
 
-    import mivw_core  # type: ignore[import-not-found]
+    import mivw_core
 
     raw_volume = await storage.get_object(object_key, expected_sha256=bytes(content_sha256))
     volume = mivw_core.Volume(tuple(info.dims), tuple(info.spacing_mm), mivw_core.DType.Int16)

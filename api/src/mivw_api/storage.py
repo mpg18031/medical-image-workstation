@@ -110,7 +110,7 @@ class ObjectStore:
 
     @asynccontextmanager
     async def _client(self) -> AsyncIterator[Any]:
-        import aioboto3  # type: ignore[import-untyped]
+        import aioboto3
 
         session = aioboto3.Session()
         client_kwargs = {

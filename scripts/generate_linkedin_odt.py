@@ -242,16 +242,10 @@ def generate_odt():
             compress_type=zipfile.ZIP_DEFLATED,
         )
         zf.writestr("meta.xml", META_XML.strip(), compress_type=zipfile.ZIP_DEFLATED)
-        zf.writestr(
-            "styles.xml", STYLES_XML.strip(), compress_type=zipfile.ZIP_DEFLATED
-        )
-        zf.writestr(
-            "content.xml", CONTENT_XML.strip(), compress_type=zipfile.ZIP_DEFLATED
-        )
+        zf.writestr("styles.xml", STYLES_XML.strip(), compress_type=zipfile.ZIP_DEFLATED)
+        zf.writestr("content.xml", CONTENT_XML.strip(), compress_type=zipfile.ZIP_DEFLATED)
 
-    print(
-        f"Successfully generated {ODT_FILENAME} ({os.path.getsize(ODT_FILENAME)} bytes)."
-    )
+    print(f"Successfully generated {ODT_FILENAME} ({os.path.getsize(ODT_FILENAME)} bytes).")
 
 
 if __name__ == "__main__":

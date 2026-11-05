@@ -72,7 +72,7 @@ repos:
     hooks:
       - id: sqlfluff-lint
         args:
-          [--dialect, postgres, "--exclude-rules=LT01,LT02,LT05,CP02", "--ignore=parsing"]
+          [--dialect, postgres, "--exclude-rules=LT01,LT02,LT05,CP02,RF04,CP04,LT14", "--ignore=parsing"]
         files: ^db/tests/
 
   - repo: https://github.com/pre-commit/mirrors-prettier

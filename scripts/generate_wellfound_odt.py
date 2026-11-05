@@ -242,16 +242,10 @@ def generate_odt():
             compress_type=zipfile.ZIP_DEFLATED,
         )
         zf.writestr("meta.xml", META_XML.strip(), compress_type=zipfile.ZIP_DEFLATED)
-        zf.writestr(
-            "styles.xml", STYLES_XML.strip(), compress_type=zipfile.ZIP_DEFLATED
-        )
-        zf.writestr(
-            "content.xml", CONTENT_XML.strip(), compress_type=zipfile.ZIP_DEFLATED
-        )
+        zf.writestr("styles.xml", STYLES_XML.strip(), compress_type=zipfile.ZIP_DEFLATED)
+        zf.writestr("content.xml", CONTENT_XML.strip(), compress_type=zipfile.ZIP_DEFLATED)
 
-    print(
-        f"Successfully generated {ODT_FILENAME} ({os.path.getsize(ODT_FILENAME)} bytes)."
-    )
+    print(f"Successfully generated {ODT_FILENAME} ({os.path.getsize(ODT_FILENAME)} bytes).")
 
     print("Converting to PDF...")
     res_pdf = subprocess.run(
@@ -261,9 +255,7 @@ def generate_odt():
         text=True,
     )
     if res_pdf.returncode == 0:
-        print(
-            f"Successfully generated {PDF_FILENAME} ({os.path.getsize(PDF_FILENAME)} bytes)."
-        )
+        print(f"Successfully generated {PDF_FILENAME} ({os.path.getsize(PDF_FILENAME)} bytes).")
     else:
         print("PDF conversion failed:", res_pdf.stderr)
 

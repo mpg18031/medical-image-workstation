@@ -146,7 +146,7 @@ async def _emit(websocket: WebSocket, state: RenderSessionState, message: dict[s
 
 
 def _to_params(message: dict[str, Any], state: RenderSessionState) -> Any:
-    import mivw_core  # type: ignore[import-not-found]
+    import mivw_core
 
     params = mivw_core.RenderParams()
     params.width = state.width

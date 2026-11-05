@@ -21,9 +21,7 @@ def build_model(*, dynamic_spatial: bool = True) -> onnx.ModelProto:
     # (no sliding window yet), so a model fixture with a fixed spatial shape
     # only works when the input volume happens to match it exactly. Symbolic
     # dims let the same graph accept whatever volume is actually run.
-    spatial: list[int | str] = (
-        ["depth", "height", "width"] if dynamic_spatial else [128, 256, 256]
-    )
+    spatial: list[int | str] = ["depth", "height", "width"] if dynamic_spatial else [128, 256, 256]
     dims: list[int | str] = [1, 1, *spatial]
 
     input_tensor = helper.make_tensor_value_info("input", TensorProto.FLOAT, dims)
@@ -32,9 +30,7 @@ def build_model(*, dynamic_spatial: bool = True) -> onnx.ModelProto:
     threshold = helper.make_tensor("threshold", TensorProto.FLOAT, [], [0.0])
 
     greater_node = helper.make_node("Greater", ["input", "threshold"], ["mask_bool"])
-    cast_node = helper.make_node(
-        "Cast", ["mask_bool"], ["output"], to=TensorProto.FLOAT
-    )
+    cast_node = helper.make_node("Cast", ["mask_bool"], ["output"], to=TensorProto.FLOAT)
 
     graph = helper.make_graph(
         [greater_node, cast_node],

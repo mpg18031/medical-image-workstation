@@ -14,6 +14,7 @@ import math
 import os
 import sys
 from array import array
+from contextlib import suppress
 from pathlib import Path
 
 import aioboto3
@@ -55,9 +56,7 @@ async def apply(dsn: str, *, dry_run: bool = False) -> int:
 
         applied = {
             row["version"]: row["checksum"]
-            for row in await conn.fetch(
-                "SELECT version, checksum FROM schema_migration"
-            )
+            for row in await conn.fetch("SELECT version, checksum FROM schema_migration")
         }
 
         pending = []
@@ -80,7 +79,7 @@ async def apply(dsn: str, *, dry_run: bool = False) -> int:
             print("schema up to date")
             return 0
 
-        for version, path, _ in pending:
+        for version, _path, _ in pending:
             print(f"{'would apply' if dry_run else 'applying'} {version}")
 
         if dry_run:
@@ -106,8 +105,7 @@ async def status(dsn: str) -> int:
     try:
         await conn.execute(BOOTSTRAP)
         applied = {
-            row["version"]
-            for row in await conn.fetch("SELECT version FROM schema_migration")
+            row["version"] for row in await conn.fetch("SELECT version FROM schema_migration")
         }
         for path in discover():
             mark = "applied" if path.stem in applied else "pending"
@@ -123,12 +121,8 @@ async def seed(dsn: str) -> int:
     Refuses to run outside an explicitly non-production database: seeding a
     real deployment with fake patients would corrupt the worklist.
     """
-    if os.environ.get("MIVW_MODE") == "server" and not os.environ.get(
-        "MIVW_ALLOW_SEED"
-    ):
-        raise SystemExit(
-            "refusing to seed in server mode; set MIVW_ALLOW_SEED=1 to override"
-        )
+    if os.environ.get("MIVW_MODE") == "server" and not os.environ.get("MIVW_ALLOW_SEED"):
+        raise SystemExit("refusing to seed in server mode; set MIVW_ALLOW_SEED=1 to override")
 
     files = sorted(SEED_DIR.glob("*.sql"))
     if not files:
@@ -175,16 +169,12 @@ async def seed_model_objects(conn: asyncpg.Connection) -> None:
         aws_access_key_id=access_key,
         aws_secret_access_key=secret_key,
     ) as client:
-        try:
+        with suppress(client.exceptions.BucketAlreadyOwnedByYou):
             await client.create_bucket(Bucket=bucket)
-        except client.exceptions.BucketAlreadyOwnedByYou:
-            pass
         await client.put_object(Bucket=bucket, Key=key, Body=payload)
         print(f"uploaded {key}")
 
-    await conn.execute(
-        "UPDATE model SET artifact_sha256 = $1 WHERE artifact_key = $2", digest, key
-    )
+    await conn.execute("UPDATE model SET artifact_sha256 = $1 WHERE artifact_key = $2", digest, key)
 
 
 async def seed_volume_objects() -> None:
@@ -207,10 +197,8 @@ async def seed_volume_objects() -> None:
         aws_access_key_id=access_key,
         aws_secret_access_key=secret_key,
     ) as client:
-        try:
+        with suppress(client.exceptions.BucketAlreadyOwnedByYou):
             await client.create_bucket(Bucket=bucket)
-        except client.exceptions.BucketAlreadyOwnedByYou:
-            pass
         for key, (depth, height, width, pattern) in volumes.items():
             payload = (
                 b"\0" * (depth * height * width * 2)

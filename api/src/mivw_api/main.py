@@ -134,7 +134,7 @@ def _register_exception_handlers(app: FastAPI) -> None:
             status=422,
             instance=request.url.path,
             requestId=getattr(request.state, "request_id", None),
-            errors=errors,  # type: ignore[arg-type]
+            errors=errors,
         )
         return JSONResponse(
             status_code=422,

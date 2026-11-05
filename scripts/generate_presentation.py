@@ -116,10 +116,7 @@ def create_slide(title, subtitle, content_blocks, is_title_slide=False):
         for idx, (b_title, items) in enumerate(content_blocks):
             pos_x = 0.8 + idx * (col_w + gap)
             items_p = "".join(
-                [
-                    f'<text:p text:style-name="P_Bullet">• {item}</text:p>'
-                    for item in items
-                ]
+                [f'<text:p text:style-name="P_Bullet">• {item}</text:p>' for item in items]
             )
             blocks_xml += f"""
         <draw:frame svg:x="{pos_x:.2f}in" svg:y="1.4in" svg:width="{col_w:.2f}in" svg:height="4.2in" draw:style-name="gr_card">
@@ -136,10 +133,7 @@ def create_slide(title, subtitle, content_blocks, is_title_slide=False):
         for idx, (b_title, items) in enumerate(content_blocks):
             pos_x = 0.8 + idx * (col_w + gap)
             items_p = "".join(
-                [
-                    f'<text:p text:style-name="P_Bullet">• {item}</text:p>'
-                    for item in items
-                ]
+                [f'<text:p text:style-name="P_Bullet">• {item}</text:p>' for item in items]
             )
             blocks_xml += f"""
         <draw:frame svg:x="{pos_x:.2f}in" svg:y="1.4in" svg:width="{col_w:.2f}in" svg:height="4.2in" draw:style-name="gr_card">
@@ -570,16 +564,10 @@ def generate_presentation():
             compress_type=zipfile.ZIP_DEFLATED,
         )
         zf.writestr("meta.xml", META_XML.strip(), compress_type=zipfile.ZIP_DEFLATED)
-        zf.writestr(
-            "styles.xml", STYLES_XML.strip(), compress_type=zipfile.ZIP_DEFLATED
-        )
-        zf.writestr(
-            "content.xml", CONTENT_XML.strip(), compress_type=zipfile.ZIP_DEFLATED
-        )
+        zf.writestr("styles.xml", STYLES_XML.strip(), compress_type=zipfile.ZIP_DEFLATED)
+        zf.writestr("content.xml", CONTENT_XML.strip(), compress_type=zipfile.ZIP_DEFLATED)
 
-    print(
-        f"Successfully generated {ODP_FILENAME} ({os.path.getsize(ODP_FILENAME)} bytes)."
-    )
+    print(f"Successfully generated {ODP_FILENAME} ({os.path.getsize(ODP_FILENAME)} bytes).")
 
     # Convert to PPTX
     print("Converting to PowerPoint (.pptx)...")
@@ -590,9 +578,7 @@ def generate_presentation():
         text=True,
     )
     if res_pptx.returncode == 0:
-        print(
-            f"Successfully generated {PPTX_FILENAME} ({os.path.getsize(PPTX_FILENAME)} bytes)."
-        )
+        print(f"Successfully generated {PPTX_FILENAME} ({os.path.getsize(PPTX_FILENAME)} bytes).")
     else:
         print("PPTX conversion failed:", res_pptx.stderr)
 
@@ -605,9 +591,7 @@ def generate_presentation():
         text=True,
     )
     if res_pdf.returncode == 0:
-        print(
-            f"Successfully generated {PDF_FILENAME} ({os.path.getsize(PDF_FILENAME)} bytes)."
-        )
+        print(f"Successfully generated {PDF_FILENAME} ({os.path.getsize(PDF_FILENAME)} bytes).")
     else:
         print("PDF conversion failed:", res_pdf.stderr)
 

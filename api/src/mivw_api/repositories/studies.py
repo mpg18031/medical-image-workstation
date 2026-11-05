@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-import asyncpg  # type: ignore[import-untyped]
+import asyncpg
 
 from mivw_api.schemas.common import decode_cursor, encode_cursor
 from mivw_api.schemas.study import (

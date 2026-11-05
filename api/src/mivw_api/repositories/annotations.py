@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import uuid
 
-import asyncpg  # type: ignore[import-untyped]
+import asyncpg
 
 from mivw_api.schemas.annotation import (
     AnnotationCreate,

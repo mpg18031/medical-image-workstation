@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 log = structlog.get_logger(__name__)
 
 try:
-    import mivw_core  # type: ignore[import-not-found]
+    import mivw_core
 
     CORE_AVAILABLE = True
     CORE_IMPORT_ERROR: str | None = None

@@ -14,7 +14,7 @@ import json
 import uuid
 from typing import Any
 
-import asyncpg  # type: ignore[import-untyped]
+import asyncpg
 import structlog
 
 from mivw_api.db import system_transaction, tenant_transaction

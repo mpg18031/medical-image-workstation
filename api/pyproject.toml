@@ -37,7 +37,7 @@ dev = [
     "mypy>=1.13",
     "bandit>=1.7",
     "pip-audit>=2.7",
-    "sqlfluff>=3.2",
+    "sqlfluff>=3.2,<4",
     "pydicom>=3.0",
     "onnx>=1.16",
 ]
@@ -56,6 +56,13 @@ ignore = ["N818", "S101"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S", "T20"]
+# These scripts are CLIs, so stdout is their intended progress/error channel.
+"../scripts/*.py" = ["T201"]
+# ODF/ODP generators embed long XML and typographic document copy as literals.
+"../scripts/generate_*.py" = ["E501", "RUF001"]
+# LibreOffice is invoked with fixed executable names and arguments.
+"../scripts/generate_presentation.py" = ["S603", "S607"]
+"../scripts/generate_wellfound_odt.py" = ["S603", "S607"]
 
 [tool.mypy]
 python_version = "3.13"

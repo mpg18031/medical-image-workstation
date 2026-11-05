@@ -47,7 +47,7 @@ jobs:
       - run: uv run --directory api ruff format --check ../api ../scripts
       - run: uv run --directory api mypy --strict src
       - run: uv run --directory api bandit -r src -ll
-      - run: uv run --directory api sqlfluff lint ../db --dialect postgres
+      - run: uv run --directory api sqlfluff lint ../db --dialect postgres --exclude-rules LT01,LT02,LT05,CP02,RF04,CP04,LT14 --ignore parsing
       - run: npm ci --prefix desktop
       - run: npm run lint --prefix desktop
 

@@ -145,7 +145,7 @@ async def validate_model(
     loaded = False
     dry_run_passed = False
     try:
-        import mivw_core  # type: ignore[import-not-found]
+        import mivw_core
 
         runtime = mivw_core.InferenceRuntime()
         runtime.load_model_bytes(artifact, model.input_spec.model_dump(by_alias=True))
