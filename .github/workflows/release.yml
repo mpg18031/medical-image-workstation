@@ -60,6 +60,7 @@ jobs:
         run: npm run build --prefix desktop -- --publish never
         env:
           MIVW_REQUIRE_CODE_SIGNING: ${{ runner.os != 'Linux' && '1' || '0' }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
           CSC_LINK: ${{ runner.os == 'macOS' && secrets.MAC_CERT_P12 || '' }}
           CSC_KEY_PASSWORD: ${{ runner.os == 'macOS' && secrets.MAC_CERT_PASSWORD || '' }}
           APPLE_ID: ${{ runner.os == 'macOS' && secrets.APPLE_ID || '' }}
